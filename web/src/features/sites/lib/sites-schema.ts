@@ -53,6 +53,7 @@ function isEmptyOrHttpUrl(value: string): boolean {
 }
 
 export const siteFormSchema = z.object({
+  tags: z.string(),
   name: z
     .string()
     .trim()
@@ -106,6 +107,7 @@ export const siteFormSchema = z.object({
 export type SiteFormValues = z.infer<typeof siteFormSchema>
 
 export const SITE_FORM_DEFAULT_VALUES: SiteFormValues = {
+  tags: '',
   name: '',
   url: '',
   externalCheckinUrl: '',
@@ -143,6 +145,7 @@ export const sitesSearchSchema = z.object({
     .transform((value) => encodeSortingParam(value))
     .catch(undefined),
   status: stringSearchParam,
+  siteTag: stringSearchParam,
   create: z.coerce.boolean().optional().catch(undefined),
   // `edit` is a one-shot transient deep-link param (`?edit=<id>`): it
   // auto-opens the edit dialog for the referenced site once, then the page

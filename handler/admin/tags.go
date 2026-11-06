@@ -131,20 +131,20 @@ func decodeTagsBody(w http.ResponseWriter, r *http.Request) ([]string, bool) {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"message": "body must be {\"tags\": [\"a\", \"b\"]}"})
 		return nil, false
 	}
-	tags := make([]string, 0, len(*body.Tags))
-	seen := make(map[string]struct{}, len(*body.Tags))
-	for _, t := range *body.Tags {
-		t = strings.TrimSpace(t)
-		if t == "" {
-			continue
+	return normalizeTags(*body.Tags), true
+}
+
+func normalizeTags(input []string) []string {
+	tags := make([]string, 0, len(input))
+	seen := make(map[string]bool)
+	for _, tag := range input {
+		tag = strings.TrimSpace(tag)
+		if tag != "" && !seen[tag] {
+			tags = append(tags, tag)
+			seen[tag] = true
 		}
-		if _, dup := seen[t]; dup {
-			continue
-		}
-		seen[t] = struct{}{}
-		tags = append(tags, t)
 	}
-	return tags, true
+	return tags
 }
 
 // PUT /api/accounts/{id}/tags

@@ -5018,6 +5018,12 @@
       "search": "Search models or providers…",
       "other": "Other models",
       "empty": "No matching models. Try another model or provider."
+    },
+    "siteTags": {
+      "label": "Site tags",
+      "filter": "Filter by site tag",
+      "all": "All site tags",
+      "editHint": "Comma separated, for example: free, community"
     }
   }
 }

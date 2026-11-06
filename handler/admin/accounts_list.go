@@ -219,6 +219,7 @@ func parseAccountListFilter(r *http.Request) (service.AccountListFilter, error) 
 	var filter service.AccountListFilter
 
 	filter.Query = strings.TrimSpace(r.URL.Query().Get("q"))
+	filter.SiteTag = strings.TrimSpace(r.URL.Query().Get("siteTag"))
 
 	rawStatus := strings.TrimSpace(r.URL.Query().Get("status"))
 	if rawStatus != "" {

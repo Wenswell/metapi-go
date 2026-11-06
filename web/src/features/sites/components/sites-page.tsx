@@ -60,7 +60,10 @@ import { SITES_STATUS_FILTER_OPTIONS, useSitesColumns } from './sites-columns'
 const SITES_COLUMN_VISIBILITY_STORAGE_KEY = 'metapi-go:sites:column-visibility'
 const SITES_COLUMN_SIZING_STORAGE_KEY = 'metapi-go:sites:column-sizing'
 
-type SitesUrlFilters = { status: string | undefined }
+type SitesUrlFilters = {
+  siteTag?: string
+  status: string | undefined
+}
 
 function readSearch(searchString?: string): UrlTableState<SitesUrlFilters> {
   if (typeof window === 'undefined') {
@@ -79,6 +82,7 @@ function readSearch(searchString?: string): UrlTableState<SitesUrlFilters> {
     pageSize: params.get('pageSize') ?? undefined,
     sort: params.get('sort') ?? undefined,
     status: params.get('status') ?? undefined,
+    siteTag: params.get('siteTag') ?? undefined,
   })
   if (!parsed.success) {
     return {
@@ -95,7 +99,10 @@ function readSearch(searchString?: string): UrlTableState<SitesUrlFilters> {
     pageIndex: data.page ?? 0,
     pageSize: data.pageSize ?? 20,
     sorting: parseSortingParam(data.sort),
-    filters: { status: asStringParam(data.status) },
+    filters: {
+      status: asStringParam(data.status),
+      siteTag: asStringParam(data.siteTag),
+    },
   }
 }
 
@@ -116,6 +123,7 @@ function buildHref(
   const sortString = encodeSorting(merged.sorting)
   if (sortString) params.set('sort', sortString)
   if (merged.filters.status) params.set('status', merged.filters.status)
+  if (merged.filters.siteTag) params.set('siteTag', merged.filters.siteTag)
   // Preserve the one-shot `create`/`edit` deep-link params across table-state
   // navigations (page-clamp / sort / filter) until the page's consumption
   // effect strips them — mirrors the accounts page's buildAccountsHref guard
@@ -144,12 +152,18 @@ function useSitesUrlState() {
     basePath: '/sites',
     read: readSearch,
     buildHref,
-    toColumnFilters: (filters) =>
-      filters.status ? [{ id: 'status', value: [filters.status] }] : [],
+    toColumnFilters: (filters) => [
+      ...(filters.status ? [{ id: 'status', value: [filters.status] }] : []),
+      ...(filters.siteTag ? [{ id: 'siteTag', value: [filters.siteTag] }] : []),
+    ],
     fromColumnFilters: (filters) => {
       const statusEntry = filters.find((filter) => filter.id === 'status')
+      const tagEntry = filters.find((filter) => filter.id === 'siteTag')
       return {
         filters: {
+          siteTag: Array.isArray(tagEntry?.value)
+            ? tagEntry.value[0]
+            : undefined,
           status: Array.isArray(statusEntry?.value)
             ? (statusEntry.value as string[])[0]
             : (statusEntry?.value as string | undefined),
@@ -314,6 +328,7 @@ export function SitesPage() {
     // at) start hidden so the default layout keeps its density; they can be
     // re-enabled via the View column switcher.
     initialColumnVisibility: {
+      siteTag: false,
       useSystemProxy: false,
       externalCheckinUrl: false,
       createdAt: false,
@@ -539,6 +554,14 @@ export function SitesPage() {
           searchPlaceholder: t('sites.toolbar.searchPlaceholder'),
           searchDebounceMs: 400,
           filters: [
+            {
+              columnId: 'siteTag',
+              title: t('siteTags.label'),
+              singleSelect: true,
+              options: [...new Set(sites.flatMap((site) => site.tags ?? []))]
+                .sort()
+                .map((tag) => ({ label: tag, value: tag })),
+            },
             {
               columnId: 'status',
               title: t('sites.columns.status'),

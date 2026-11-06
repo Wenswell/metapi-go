@@ -722,6 +722,7 @@ func ListAccountsWithSites(db *sqlx.DB) ([]map[string]any, error) {
 // client-side filters over a server-paginated table could never match rows
 // on other pages).
 type AccountListFilter struct {
+	SiteTag string
 	// Statuses is a whitelisted subset of the account status domain
 	// (active / disabled / expired). Empty means "no status filter".
 	Statuses []string
@@ -742,6 +743,26 @@ type AccountListFilter struct {
 // same envelope as /api/channels and /api/checkin/logs).
 func ListAccountsWithSitesPaginated(db *sqlx.DB, limit, offset int, filter AccountListFilter) ([]map[string]any, int64, error) {
 	where, args := buildAccountListFilter(filter)
+	if filter.SiteTag != "" {
+		ids, err := SiteIDsWithTag(db, filter.SiteTag)
+		if err != nil {
+			return nil, 0, err
+		}
+		clause := "1 = 0"
+		if len(ids) > 0 {
+			var extra []any
+			clause, extra, err = sqlx.In("a.site_id IN (?)", ids)
+			if err != nil {
+				return nil, 0, err
+			}
+			args = append(args, extra...)
+		}
+		if where == "" {
+			where = " WHERE " + clause
+		} else {
+			where += " AND " + clause
+		}
+	}
 
 	rows, err := db.Queryx(db.Rebind(
 		`SELECT a.*, s.id as site_id_val, s.name as site_name, s.url as site_url,

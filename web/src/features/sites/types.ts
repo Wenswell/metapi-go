@@ -69,6 +69,7 @@ export type Site = {
  * legacy `SiteSavePayload` shape so the backend accepts it unchanged.
  */
 export type SiteFormPayload = {
+  tags?: string[]
   initializationPresetId?: string
   name: string
   url: string

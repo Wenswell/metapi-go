@@ -519,8 +519,20 @@ export function RoutesPage() {
   const { data: sitesList } = useSites()
   const accountOptions = useMemo(
     () =>
-      buildAccountOptions(accountsSnapshot, tokenId ? accountId : undefined),
-    [accountsSnapshot, accountId, tokenId]
+      buildAccountOptions(
+        accountsSnapshot,
+        tokenId ? accountId : undefined
+      ).map((option) => {
+        const account = accountsSnapshot?.accounts.find(
+          (account) => account.id === option.id
+        )
+        return {
+          ...option,
+          siteTags:
+            sitesList?.find((site) => site.id === account?.siteId)?.tags ?? [],
+        }
+      }),
+    [accountsSnapshot, accountId, tokenId, sitesList]
   )
   const chainAccountName = useMemo(() => {
     if (!accountId) return undefined

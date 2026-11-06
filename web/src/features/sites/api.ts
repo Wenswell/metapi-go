@@ -166,7 +166,7 @@ export function useUpdateSite(
     },
     onSettled: (_data, _error, { payload }) => {
       queryClient.invalidateQueries({ queryKey: sitesKeys.list() })
-      if (payload.status !== undefined) {
+      if (payload.status !== undefined || payload.tags !== undefined) {
         void queryClient.invalidateQueries({ queryKey: accountQueryKeys.all })
         void queryClient.invalidateQueries({ queryKey: channelsKeys.all })
         void queryClient.invalidateQueries({ queryKey: routeQueryKeys.all })

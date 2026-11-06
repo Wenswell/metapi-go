@@ -18,6 +18,7 @@ export const accountsApi = {
     status?: string
     /** Comma-separated site ids. */
     site?: string
+    siteTag?: string
   }) =>
     request(
       `/api/accounts${buildQueryString({
@@ -26,6 +27,7 @@ export const accountsApi = {
         q: params.q || undefined,
         status: params.status || undefined,
         site: params.site || undefined,
+        siteTag: params.siteTag || undefined,
       })}`
     ) as Promise<{
       items?: unknown[]

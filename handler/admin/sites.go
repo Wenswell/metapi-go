@@ -225,6 +225,7 @@ func (h *sitesHandler) createSite(w http.ResponseWriter, r *http.Request) {
 	now := time.Now().UTC().Format(time.RFC3339)
 	siteData := map[string]any{
 		"name":                               body.Name,
+		"tags":                               encodeTagsJSON(normalizeTags(body.Tags)),
 		"url":                                canonicalURL,
 		"platform":                           platform,
 		"status":                             coalesce(normalizedStatus, "active"),
@@ -353,6 +354,9 @@ func (h *sitesHandler) updateSite(w http.ResponseWriter, r *http.Request) {
 	}
 
 	updates := map[string]any{}
+	if body.Tags != nil {
+		updates["tags"] = encodeTagsJSON(normalizeTags(*body.Tags))
+	}
 
 	// Validate each field
 	if body.Name != nil {

@@ -87,6 +87,7 @@ const DEFAULT_PAGE_SIZE = 20
 type AccountsUrlFilters = {
   status: string
   site: string
+  siteTag: string
 }
 
 /**
@@ -116,6 +117,7 @@ function readAccountsSearch(
     filters: {
       status: params.get('status') ?? '',
       site: params.get('site') ?? '',
+      siteTag: params.get('siteTag') ?? '',
     },
   }
 }
@@ -146,6 +148,7 @@ function buildAccountsHref(
   if (sortString) params.set('sort', sortString)
   if (merged.filters.status) params.set('status', merged.filters.status)
   if (merged.filters.site) params.set('site', merged.filters.site)
+  if (merged.filters.siteTag) params.set('siteTag', merged.filters.siteTag)
   // Transient deep-link params are preserved across table-state syncs until
   // the page's one-shot consume effects below have stripped them (a toolbar
   // commit or page clamp firing first would otherwise drop the deep link).
@@ -174,16 +177,19 @@ function useAccountsUrlState() {
       const siteIds = filters.site.split(',').filter(Boolean)
       if (statusValues.length) out.push({ id: 'status', value: statusValues })
       if (siteIds.length) out.push({ id: 'site', value: siteIds })
+      if (filters.siteTag) out.push({ id: 'siteTag', value: [filters.siteTag] })
       return out
     },
     fromColumnFilters: (filters) => {
       const statusEntry = filters.find((filter) => filter.id === 'status')
       const siteEntry = filters.find((filter) => filter.id === 'site')
+      const tagEntry = filters.find((filter) => filter.id === 'siteTag')
       return {
         filters: {
           status: Array.isArray(statusEntry?.value)
             ? statusEntry.value.join(',')
             : '',
+          siteTag: Array.isArray(tagEntry?.value) ? tagEntry.value[0] : '',
           site: Array.isArray(siteEntry?.value)
             ? siteEntry.value.join(',')
             : '',
@@ -255,6 +261,7 @@ export function AccountsPage() {
     q: urlState.globalFilter,
     status: urlState.filters.status,
     site: urlState.filters.site,
+    siteTag: urlState.filters.siteTag,
   })
   const { data, isLoading, isFetching, error, refetch } = accountsPageQuery
   const probeHistoryQuery = useProbeHistory('accounts')
@@ -677,6 +684,14 @@ export function AccountsPage() {
             </Button>
           ),
           filters: [
+            {
+              columnId: 'siteTag',
+              title: t('siteTags.label'),
+              singleSelect: true,
+              options: [...new Set(sites.flatMap((site) => site.tags ?? []))]
+                .sort()
+                .map((tag) => ({ label: tag, value: tag })),
+            },
             {
               columnId: 'status',
               title: t('accounts.page.filterStatusTitle'),

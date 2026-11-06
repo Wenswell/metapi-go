@@ -59,7 +59,8 @@ export const accountQueryKeys = {
     pageSize: number,
     q?: string,
     status?: string,
-    site?: string
+    site?: string,
+    siteTag?: string
   ) =>
     [
       ...accountQueryKeys.all,
@@ -70,6 +71,7 @@ export const accountQueryKeys = {
         q: q || undefined,
         status: status || undefined,
         site: site || undefined,
+        siteTag: siteTag || undefined,
       },
     ] as const,
   detail: (id: number) => ['accounts', 'detail', id] as const,
@@ -104,6 +106,7 @@ export async function fetchAccountsPage(params: {
   q: string
   status: string
   site: string
+  siteTag?: string
 }): Promise<AccountsPageData> {
   const response = await api.getAccountsPage({
     page: params.pageIndex + 1,
@@ -111,6 +114,7 @@ export async function fetchAccountsPage(params: {
     q: params.q,
     status: params.status,
     site: params.site,
+    siteTag: params.siteTag,
   })
   const items = Array.isArray(response.items)
     ? (response.items as object[])
@@ -140,6 +144,7 @@ export function useAccountsPage(
     q: string
     status: string
     site: string
+    siteTag?: string
   },
   options?: Omit<UseQueryOptions<AccountsPageData>, 'queryKey' | 'queryFn'>
 ) {
@@ -149,7 +154,8 @@ export function useAccountsPage(
       params.pageSize,
       params.q,
       params.status,
-      params.site
+      params.site,
+      params.siteTag
     ),
     queryFn: () => fetchAccountsPage(params),
     placeholderData: (previous) => previous,

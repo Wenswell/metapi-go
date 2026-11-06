@@ -517,3 +517,40 @@ func TestListAccounts_ServerSideFiltersInvalidParams(t *testing.T) {
 		}
 	}
 }
+
+func TestListAccounts_SiteTagFilter(t *testing.T) {
+	db, r := setupAccountsFilterTest(t)
+	var siteID int64
+	if err := db.Get(&siteID, "SELECT MIN(id) FROM sites"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.Exec(db.Rebind("UPDATE sites SET tags = ? WHERE id = ?"), `["公益","Linux.do"]`, siteID); err != nil {
+		t.Fatal(err)
+	}
+	for _, tag := range []string{"公益", "公益站", "不存在"} {
+		resp := doGet(t, r, "/api/accounts?page=1&pageSize=1&siteTag="+tag)
+		if resp.Code != 200 {
+			t.Fatalf("%s: %s", tag, resp.Body.String())
+		}
+		var result struct {
+			Total int
+			Items []map[string]any
+			Sites []map[string]any
+		}
+		if err := json.Unmarshal(resp.Body.Bytes(), &result); err != nil {
+			t.Fatal(err)
+		}
+		if tag == "公益" {
+			if result.Total == 0 || len(result.Items) != 1 {
+				t.Fatalf("matching tag: %#v", result)
+			}
+			for _, item := range result.Items {
+				if item["siteId"] != float64(siteID) {
+					t.Fatalf("wrong site: %#v", item)
+				}
+			}
+		} else if result.Total != 0 {
+			t.Fatalf("tag must match exactly: %s total=%d", tag, result.Total)
+		}
+	}
+}

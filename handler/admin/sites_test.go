@@ -1301,3 +1301,33 @@ func TestErrorCodeSiteNotFound(t *testing.T) {
 		})
 	}
 }
+
+func TestSites_TagsInFormAndList(t *testing.T) {
+	_, r := setupSitesTest(t)
+	created := doPostJSON(t, r, "/api/sites", map[string]any{"name": "Tagged", "url": "https://tags.example.com", "platform": "openai", "tags": []string{" 公益 ", "公益", "Linux.do"}})
+	if created.Code != 201 && created.Code != 200 {
+		t.Fatalf("create: %s", created.Body.String())
+	}
+	var site map[string]any
+	if err := json.Unmarshal(created.Body.Bytes(), &site); err != nil {
+		t.Fatal(err)
+	}
+	id := int64(site["id"].(float64))
+	for _, tags := range [][]string{{"公益", "Linux.do"}, {}} {
+		body, _ := json.Marshal(map[string]any{"tags": tags})
+		req := httptest.NewRequest(http.MethodPut, "/api/sites/"+strconv.FormatInt(id, 10), bytes.NewReader(body))
+		rec := httptest.NewRecorder()
+		r.ServeHTTP(rec, req)
+		if rec.Code != 200 {
+			t.Fatalf("update: %s", rec.Body.String())
+		}
+		resp := doGet(t, r, "/api/sites")
+		var rows []map[string]any
+		if err := json.Unmarshal(resp.Body.Bytes(), &rows); err != nil {
+			t.Fatal(err)
+		}
+		if len(rows) != 1 || len(rows[0]["tags"].([]any)) != len(tags) {
+			t.Fatalf("tags projection: %s", resp.Body.String())
+		}
+	}
+}

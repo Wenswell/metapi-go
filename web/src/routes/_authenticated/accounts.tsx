@@ -54,6 +54,7 @@ export const accountsSearchSchema = z.object({
     .catch(undefined),
   status: stringSearchParam,
   site: stringSearchParam,
+  siteTag: stringSearchParam,
   siteId: z.coerce.number().int().positive().optional().catch(undefined),
   accountId: z.coerce.number().int().positive().optional().catch(undefined),
   create: z.coerce.boolean().optional().catch(undefined),

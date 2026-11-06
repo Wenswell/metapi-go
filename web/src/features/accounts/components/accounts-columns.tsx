@@ -319,6 +319,16 @@ export function useAccountsColumns(
   return useMemo<ColumnDef<Account>[]>(
     () => [
       {
+        id: 'siteTag',
+        header: t('siteTags.label'),
+        accessorFn: () => [],
+        filterFn: (row, id, values: string[]) =>
+          !values.length ||
+          values.some((tag) => row.getValue<string[]>(id).includes(tag)),
+        cell: ({ getValue }) => getValue<string[]>().join(', '),
+        enableGlobalFilter: false,
+      },
+      {
         id: 'select',
         size: 40,
         enableSorting: false,

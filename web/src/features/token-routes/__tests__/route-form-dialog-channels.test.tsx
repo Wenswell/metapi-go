@@ -136,6 +136,41 @@ function renderDialog(
 }
 
 describe('RouteFormDialog channel drafts', () => {
+  it('combines site tags and search without removing hidden selections', async () => {
+    renderDialog({
+      mode: 'edit',
+      route: editableRoute,
+      accountOptions: [
+        { id: 7, label: 'free-one', siteTags: ['公益'] },
+        { id: 8, label: 'paid-two', siteTags: ['付费'] },
+        { id: 9, label: 'free-other', siteTags: ['公益'] },
+      ],
+    })
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'paid-two' }))
+    fireEvent.click(screen.getByLabelText('Filter by site tag'))
+    const tagOption = await screen.findByRole('option', { name: '公益' })
+    fireEvent.pointerDown(tagOption)
+    fireEvent.click(tagOption)
+    await waitFor(() => expect(screen.queryByRole('checkbox', { name: 'paid-two' })).not.toBeInTheDocument())
+    fireEvent.change(
+      screen.getByRole('searchbox', { name: /Search accounts/ }),
+      { target: { value: 'one' } }
+    )
+    expect(
+      screen.queryByRole('checkbox', { name: 'free-other' })
+    ).not.toBeInTheDocument()
+    fireEvent.click(
+      screen.getByRole('checkbox', { name: 'Select matching accounts' })
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }))
+    await waitFor(() =>
+      expect(mockBatchMutate).toHaveBeenCalledWith({
+        routeId: editableRoute.id,
+        channels: [{ accountId: 8 }, { accountId: 7 }],
+      })
+    )
+  })
+
   it('keeps the exact key through deselection, reselection and bulk selection', async () => {
     renderDialog({
       accountOptions: [

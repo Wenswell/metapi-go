@@ -114,6 +114,7 @@ function matchesTemplate(
 function siteToFormValues(site: Site): SiteFormValues {
   return {
     name: site.name ?? '',
+    tags: (site.tags ?? []).join(', '),
     url: site.url ?? '',
     externalCheckinUrl: site.externalCheckinUrl ?? '',
     platform: site.platform ?? '',
@@ -162,6 +163,14 @@ function buildPayload(
     name: values.name,
     url: primaryUrl,
     externalCheckinUrl: values.externalCheckinUrl,
+    tags: [
+      ...new Set(
+        values.tags
+          .split(/[,，\n]/)
+          .map((tag) => tag.trim())
+          .filter(Boolean)
+      ),
+    ],
     platform: values.platform,
     proxyUrl: values.proxyUrl,
     useSystemProxy: values.useSystemProxy,
@@ -586,6 +595,22 @@ export function SiteFormSheet({
                   )}
                 />
 
+                <FormField
+                  control={form.control}
+                  name='tags'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('siteTags.label')}</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        {t('siteTags.editHint')}
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <FormField
                   control={form.control}
                   name='externalCheckinUrl'

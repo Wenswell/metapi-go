@@ -2,13 +2,14 @@ package payloads
 
 // SiteCreatePayload mirrors TS SiteCreatePayload (siteRoutePayloads.ts).
 type SiteCreatePayload struct {
-	Name                   string  `json:"name"`
-	URL                    string  `json:"url"`
-	Platform               *string `json:"platform,omitempty"`
-	InitializationPresetID *string `json:"initializationPresetId,omitempty"`
-	ProxyURL               *string `json:"proxyUrl,omitempty"`
-	UseSystemProxy         *bool   `json:"useSystemProxy,omitempty"`
-	CustomHeaders          *string `json:"customHeaders,omitempty"`
+	Tags                   []string `json:"tags,omitempty"`
+	Name                   string   `json:"name"`
+	URL                    string   `json:"url"`
+	Platform               *string  `json:"platform,omitempty"`
+	InitializationPresetID *string  `json:"initializationPresetId,omitempty"`
+	ProxyURL               *string  `json:"proxyUrl,omitempty"`
+	UseSystemProxy         *bool    `json:"useSystemProxy,omitempty"`
+	CustomHeaders          *string  `json:"customHeaders,omitempty"`
 	// CustomHeadersOverrideRequestHeaders: when true, site custom headers
 	// overwrite same-name request headers (site-wins). Default false = request-wins.
 	CustomHeadersOverrideRequestHeaders *bool    `json:"customHeadersOverrideRequestHeaders,omitempty"`
@@ -38,12 +39,13 @@ type SiteAPIEndpointInput struct {
 
 // SiteUpdatePayload mirrors TS SiteUpdatePayload.
 type SiteUpdatePayload struct {
-	Name           *string `json:"name,omitempty"`
-	URL            *string `json:"url,omitempty"`
-	Platform       *string `json:"platform,omitempty"`
-	ProxyURL       *string `json:"proxyUrl,omitempty"`
-	UseSystemProxy *bool   `json:"useSystemProxy,omitempty"`
-	CustomHeaders  *string `json:"customHeaders,omitempty"`
+	Tags           *[]string `json:"tags,omitempty"`
+	Name           *string   `json:"name,omitempty"`
+	URL            *string   `json:"url,omitempty"`
+	Platform       *string   `json:"platform,omitempty"`
+	ProxyURL       *string   `json:"proxyUrl,omitempty"`
+	UseSystemProxy *bool     `json:"useSystemProxy,omitempty"`
+	CustomHeaders  *string   `json:"customHeaders,omitempty"`
 	// CustomHeadersOverrideRequestHeaders: opt-in site-wins for same-name headers.
 	CustomHeadersOverrideRequestHeaders *bool    `json:"customHeadersOverrideRequestHeaders,omitempty"`
 	ExternalCheckinURL                  *string  `json:"externalCheckinUrl,omitempty"`

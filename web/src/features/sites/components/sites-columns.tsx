@@ -90,6 +90,16 @@ export function useSitesColumns(
 
   const columns: ColumnDef<Site>[] = [
     {
+      id: 'siteTag',
+      header: t('siteTags.label'),
+      accessorFn: (row) => (row.tags ?? []).join(", "),
+      filterFn: (row, _id, values: string[]) =>
+        !values.length ||
+        values.some((tag) => (row.original.tags ?? []).includes(tag)),
+      cell: ({ getValue }) => getValue<string>(),
+      enableGlobalFilter: true,
+    },
+    {
       id: 'select',
       enableSorting: false,
       enableHiding: false,

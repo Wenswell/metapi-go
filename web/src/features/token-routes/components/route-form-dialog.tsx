@@ -9,6 +9,7 @@ import { useEffect, useId, useMemo, useState } from 'react'
 import { useForm, type SubmitErrorHandler } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 
+import { SiteTagFilter } from '@/components/common/site-tag-filter'
 import { useDirtyDialogClose } from '@/components/form/dirty-dialog-close'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -60,7 +61,11 @@ import { RouteAdvancedFields } from './route-advanced-fields'
 import { RouteChannelEditor } from './route-channel-editor'
 import { showRouteCompletionToast } from './route-completion-toast'
 
-export type RouteAccountOption = { id: number; label: string }
+export type RouteAccountOption = {
+  id: number
+  label: string
+  siteTags?: string[]
+}
 
 interface RouteFormDialogProps {
   open: boolean
@@ -338,14 +343,15 @@ function PatternModeFields({
   const { t } = useTranslation()
   const bulkLabelId = useId()
   const [accountSearch, setAccountSearch] = useState('')
+  const [siteTag, setSiteTag] = useState('')
   const visibleAccounts = useMemo(() => {
     const query = accountSearch.trim().toLocaleLowerCase()
-    return query
-      ? accountOptions.filter((account) =>
-          account.label.toLocaleLowerCase().includes(query)
-        )
-      : accountOptions
-  }, [accountOptions, accountSearch])
+    return accountOptions.filter(
+      (account) =>
+        (!siteTag || account.siteTags?.includes(siteTag)) &&
+        (!query || account.label.toLocaleLowerCase().includes(query))
+    )
+  }, [accountOptions, accountSearch, siteTag])
   const modelPattern = form.watch('modelPattern') ?? ''
   const isRegex = isRegexModelPattern(modelPattern)
   return (
@@ -406,7 +412,7 @@ function PatternModeFields({
           let selectKey = allSelected
             ? 'tokenRoutes.formPattern.channelsDeselectAll'
             : 'tokenRoutes.formPattern.channelsSelectAll'
-          if (accountSearch.trim()) {
+          if (accountSearch.trim() || siteTag) {
             selectKey = allSelected
               ? 'tokenRoutes.formPattern.channelsDeselectFiltered'
               : 'tokenRoutes.formPattern.channelsSelectFiltered'
@@ -423,6 +429,15 @@ function PatternModeFields({
               </FormDescription>
               {accountOptions.length > 0 ? (
                 <div className='overflow-hidden rounded-lg border'>
+                  <div className='border-b p-2'>
+                    <SiteTagFilter
+                      tags={accountOptions.flatMap(
+                        (account) => account.siteTags ?? []
+                      )}
+                      value={siteTag}
+                      onChange={setSiteTag}
+                    />
+                  </div>
                   <div className='relative border-b p-2'>
                     <Search
                       className='text-muted-foreground pointer-events-none absolute top-1/2 left-5 size-4 -translate-y-1/2'

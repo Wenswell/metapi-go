@@ -160,6 +160,10 @@ func LoadSiteWithEndpoints(db *sqlx.DB, siteID int64) (map[string]any, error) {
 }
 
 func siteToMap(site store.Site, endpoints []store.SiteAPIEndpoint) map[string]any {
+	tags := json.RawMessage("[]")
+	if site.Tags != nil && *site.Tags != "" {
+		tags = json.RawMessage(*site.Tags)
+	}
 	siteMap := map[string]any{
 		"id":                                  site.ID,
 		"name":                                site.Name,
@@ -187,6 +191,7 @@ func siteToMap(site store.Site, endpoints []store.SiteAPIEndpoint) map[string]an
 		"createdAt":                           site.CreatedAt,
 		"updatedAt":                           site.UpdatedAt,
 		"apiEndpoints":                        endpoints,
+		"tags":                                tags,
 	}
 	RedactSiteCredentials(siteMap)
 	return siteMap
@@ -460,8 +465,8 @@ func CreateSite(db *sqlx.DB, siteData map[string]any) (int64, error) {
 		 custom_headers_override_request_headers,
 		 external_checkin_url, status, is_pinned, sort_order, global_weight, max_concurrency,
 		 post_refresh_probe_enabled, post_refresh_probe_model, post_refresh_probe_scope,
-		 post_refresh_probe_latency_threshold_ms, browser_ua, cf_clearance, resin_enabled, use_utls, created_at, updated_at)
-		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		 post_refresh_probe_latency_threshold_ms, browser_ua, cf_clearance, resin_enabled, use_utls, tags, created_at, updated_at)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		 RETURNING id`),
 		name, urlStr, platform,
 		siteData["proxyUrl"], useSystemProxy, siteData["customHeaders"],
@@ -471,7 +476,7 @@ func CreateSite(db *sqlx.DB, siteData map[string]any) (int64, error) {
 		postRefreshProbeEnabled, postRefreshProbeModel,
 		postRefreshProbeScope, postRefreshProbeLatencyThresholdMs,
 		siteData["browserUa"], siteData["cfClearance"],
-		siteData["resinEnabled"], siteData["useUtls"],
+		siteData["resinEnabled"], siteData["useUtls"], siteData["tags"],
 		now, now,
 	).Scan(&siteID)
 	if err != nil {
@@ -633,6 +638,7 @@ func ApplySiteStatusSideEffects(db *sqlx.DB, siteID int64, siteName string, newS
 func jsonKeyToColumn(key string) string {
 	mapping := map[string]string{
 		"name":                                "name",
+		"tags":                                "tags",
 		"url":                                 "url",
 		"platform":                            "platform",
 		"proxyUrl":                            "proxy_url",

@@ -32,6 +32,7 @@ export type CredentialMode = (typeof CREDENTIAL_MODES)[number]
 // ---------------------------------------------------------------------------
 
 const siteSchema = z.object({
+  tags: z.array(z.string()).optional(),
   id: z.coerce.number(),
   name: z.string().nullish().default(''),
   url: z.string().nullish().default(''),
