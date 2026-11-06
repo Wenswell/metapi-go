@@ -92,7 +92,7 @@ export function useSitesColumns(
     {
       id: 'siteTag',
       header: t('siteTags.label'),
-      accessorFn: (row) => (row.tags ?? []).join(", "),
+      accessorFn: (row) => (row.tags ?? []).join(', '),
       filterFn: (row, _id, values: string[]) =>
         !values.length ||
         values.some((tag) => (row.original.tags ?? []).includes(tag)),

@@ -11,6 +11,8 @@ This list is checked against the routes reachable from `router.New` by `docs/api
 
 ### GET
 
+- `/api/account-groups`
+
 - `/api/user/budget`
 - `/api/admin/users/:userId/budget`
 - `/api/admin/users/:userId/budget/holds`
@@ -128,6 +130,8 @@ This list is checked against the routes reachable from `router.New` by `docs/api
 - `/api/tasks/:id`
 - `/api/update-center/status`
 ### POST
+
+- `/api/account-groups/refresh`
 
 - `/api/admin/users/:userId/budget/reconcile`
 

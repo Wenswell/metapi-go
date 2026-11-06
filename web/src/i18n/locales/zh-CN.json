@@ -5024,6 +5024,40 @@
       "filter": "按站点标签筛选",
       "all": "全部站点标签",
       "editHint": "以逗号分隔，例如：公益, Linux.do"
+    },
+    "accountGroups": {
+      "title": "上游分组",
+      "description": "查询账号可用分组、倍率与能力。刷新结果按账号保存。",
+      "refreshAll": "刷新筛选账号",
+      "refreshing": "正在刷新…",
+      "refresh": "刷新",
+      "search": "搜索站点、账号或分组",
+      "platform": "平台",
+      "allPlatforms": "全部平台",
+      "capability": "能力",
+      "capabilities": {
+        "all": "全部能力",
+        "image": "图片",
+        "video": "视频"
+      },
+      "sort": "排序",
+      "sorts": {
+        "name": "分组名称",
+        "rate": "倍率升序",
+        "rate-desc": "倍率降序",
+        "site": "站点名称"
+      },
+      "site": "站点",
+      "account": "账号",
+      "name": "分组",
+      "rate": "倍率",
+      "detail": "描述 / 错误",
+      "updated": "最近尝试",
+      "refreshStatus": "账号刷新状态",
+      "loading": "正在加载…",
+      "empty": "没有匹配分组，请先刷新账号。",
+      "notFetched": "尚未刷新",
+      "lastSuccess": "上次成功"
     }
   }
 }

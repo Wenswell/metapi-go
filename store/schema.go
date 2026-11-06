@@ -793,3 +793,11 @@ type Event struct {
 	RelatedType *string `db:"related_type" json:"relatedType"`
 	CreatedAt   string  `db:"created_at" json:"createdAt"`
 }
+
+func buildAccountGroupSnapshotsDDL(_ string) string {
+	return `CREATE TABLE IF NOT EXISTS account_group_snapshots (
+   account_id INTEGER PRIMARY KEY REFERENCES accounts(id) ON DELETE CASCADE,
+   groups_json TEXT NOT NULL DEFAULT '[]', fetched_at TEXT NOT NULL DEFAULT '',
+   attempted_at TEXT NOT NULL, error TEXT NOT NULL DEFAULT ''
+ )`
+}

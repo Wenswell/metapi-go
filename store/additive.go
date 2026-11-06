@@ -654,6 +654,10 @@ var enterpriseAdditiveSteps = []AdditiveStep{
 		Description: "user-wide token credit budgets, group pricing and durable request settlement ledger",
 		Apply:       migrateGatewayUserBudgets,
 	},
+	{Version: "local_001_account_group_snapshots", Description: "account-visible group pricing snapshots", Apply: func(db *DB) error {
+		_, err := db.Exec(buildAccountGroupSnapshotsDDL(db.Dialect))
+		return err
+	}},
 }
 
 // schemaMigrationsDDL creates the version bookkeeping table.

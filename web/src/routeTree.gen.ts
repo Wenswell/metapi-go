@@ -15,6 +15,7 @@ import { Route as UserRouteImport } from './routes/user'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedSplatRouteImport } from './routes/_authenticated/$'
 import { Route as AuthenticatedAboutRouteImport } from './routes/_authenticated/about'
+import { Route as AuthenticatedAccountGroupsRouteImport } from './routes/_authenticated/account-groups'
 import { Route as AuthenticatedAccountsRouteImport } from './routes/_authenticated/accounts'
 import { Route as AuthenticatedChannelsRouteImport } from './routes/_authenticated/channels'
 import { Route as AuthenticatedCheckinRouteImport } from './routes/_authenticated/checkin'
@@ -68,6 +69,12 @@ const AuthenticatedAboutRoute = AuthenticatedAboutRouteImport.update({
   path: '/about',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAccountGroupsRoute =
+  AuthenticatedAccountGroupsRouteImport.update({
+    id: '/account-groups',
+    path: '/account-groups',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAccountsRoute = AuthenticatedAccountsRouteImport.update({
   id: '/accounts',
   path: '/accounts',
@@ -207,6 +214,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
   '/$': typeof AuthenticatedSplatRoute
   '/about': typeof AuthenticatedAboutRoute
+  '/account-groups': typeof AuthenticatedAccountGroupsRoute
   '/accounts': typeof AuthenticatedAccountsRoute
   '/channels': typeof AuthenticatedChannelsRoute
   '/checkin': typeof AuthenticatedCheckinRoute
@@ -234,6 +242,7 @@ export interface FileRoutesByTo {
   '/user': typeof UserRoute
   '/$': typeof AuthenticatedSplatRoute
   '/about': typeof AuthenticatedAboutRoute
+  '/account-groups': typeof AuthenticatedAccountGroupsRoute
   '/accounts': typeof AuthenticatedAccountsRoute
   '/channels': typeof AuthenticatedChannelsRoute
   '/checkin': typeof AuthenticatedCheckinRoute
@@ -265,6 +274,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
   '/_authenticated/$': typeof AuthenticatedSplatRoute
   '/_authenticated/about': typeof AuthenticatedAboutRoute
+  '/_authenticated/account-groups': typeof AuthenticatedAccountGroupsRoute
   '/_authenticated/accounts': typeof AuthenticatedAccountsRoute
   '/_authenticated/channels': typeof AuthenticatedChannelsRoute
   '/_authenticated/checkin': typeof AuthenticatedCheckinRoute
@@ -298,6 +308,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/$'
     | '/about'
+    | '/account-groups'
     | '/accounts'
     | '/channels'
     | '/checkin'
@@ -325,6 +336,7 @@ export interface FileRouteTypes {
     | '/user'
     | '/$'
     | '/about'
+    | '/account-groups'
     | '/accounts'
     | '/channels'
     | '/checkin'
@@ -355,6 +367,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/$'
     | '/_authenticated/about'
+    | '/_authenticated/account-groups'
     | '/_authenticated/accounts'
     | '/_authenticated/channels'
     | '/_authenticated/checkin'
@@ -427,6 +440,13 @@ declare module '@tanstack/react-router' {
       path: '/about'
       fullPath: '/about'
       preLoaderRoute: typeof AuthenticatedAboutRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/account-groups': {
+      id: '/_authenticated/account-groups'
+      path: '/account-groups'
+      fullPath: '/account-groups'
+      preLoaderRoute: typeof AuthenticatedAccountGroupsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/accounts': {
@@ -649,6 +669,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRouteRoute: typeof AuthenticatedSettingsRouteRouteWithChildren
   AuthenticatedSplatRoute: typeof AuthenticatedSplatRoute
   AuthenticatedAboutRoute: typeof AuthenticatedAboutRoute
+  AuthenticatedAccountGroupsRoute: typeof AuthenticatedAccountGroupsRoute
   AuthenticatedAccountsRoute: typeof AuthenticatedAccountsRoute
   AuthenticatedChannelsRoute: typeof AuthenticatedChannelsRoute
   AuthenticatedCheckinRoute: typeof AuthenticatedCheckinRoute
@@ -673,6 +694,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRouteRoute: AuthenticatedSettingsRouteRouteWithChildren,
   AuthenticatedSplatRoute: AuthenticatedSplatRoute,
   AuthenticatedAboutRoute: AuthenticatedAboutRoute,
+  AuthenticatedAccountGroupsRoute: AuthenticatedAccountGroupsRoute,
   AuthenticatedAccountsRoute: AuthenticatedAccountsRoute,
   AuthenticatedChannelsRoute: AuthenticatedChannelsRoute,
   AuthenticatedCheckinRoute: AuthenticatedCheckinRoute,

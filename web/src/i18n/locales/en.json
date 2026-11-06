@@ -5024,6 +5024,40 @@
       "filter": "Filter by site tag",
       "all": "All site tags",
       "editHint": "Comma separated, for example: free, community"
+    },
+    "accountGroups": {
+      "title": "Upstream groups",
+      "description": "Account-visible groups, rates and capabilities. Refresh results are saved per account.",
+      "refreshAll": "Refresh filtered accounts",
+      "refreshing": "Refreshing…",
+      "refresh": "Refresh",
+      "search": "Search sites, accounts or groups",
+      "platform": "Platform",
+      "allPlatforms": "All platforms",
+      "capability": "Capability",
+      "capabilities": {
+        "all": "All capabilities",
+        "image": "Image",
+        "video": "Video"
+      },
+      "sort": "Sort",
+      "sorts": {
+        "name": "Group name",
+        "rate": "Rate ascending",
+        "rate-desc": "Rate descending",
+        "site": "Site name"
+      },
+      "site": "Site",
+      "account": "Account",
+      "name": "Group",
+      "rate": "Rate",
+      "detail": "Description / error",
+      "updated": "Last attempt",
+      "refreshStatus": "Account refresh status",
+      "loading": "Loading…",
+      "empty": "No matching groups. Refresh accounts first.",
+      "notFetched": "Not refreshed",
+      "lastSuccess": "Last success"
     }
   }
 }

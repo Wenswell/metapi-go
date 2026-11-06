@@ -40,6 +40,7 @@ var schemaTables = []schemaTable{
 	{"site_disabled_models", buildSiteDisabledModelsDDL},
 	{"accounts", buildAccountsDDL},
 	{"account_pricing", buildAccountPricingDDL},
+	{"account_group_snapshots", buildAccountGroupSnapshotsDDL},
 	{"account_tokens", buildAccountTokensDDL},
 	{"checkin_logs", buildCheckinLogsDDL},
 	{"model_availability", buildModelAvailabilityDDL},

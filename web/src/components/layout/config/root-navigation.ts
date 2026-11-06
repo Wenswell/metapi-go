@@ -64,6 +64,11 @@ export const ROOT_NAVIGATION: SidebarData = {
           icon: ShieldCheck,
         },
         {
+          title: 'accountGroups.title',
+          url: '/account-groups',
+          icon: Boxes,
+        },
+        {
           title: 'sidebar.items.checkin',
           url: '/checkin',
           icon: CalendarCheck,
