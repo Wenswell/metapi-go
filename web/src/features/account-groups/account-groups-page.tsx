@@ -111,6 +111,12 @@ export function AccountGroupsPage() {
         search.sort === 'site' ? (b.site?.name ?? '') : b.group.name
       )
     })
+  const refreshCandidates =
+    search.platform || search.capability !== 'all'
+      ? candidates.filter((account) =>
+          filtered.some((row) => row.account.id === account.id)
+        )
+      : candidates
   const errors = [
     sites.error,
     accounts.error,
@@ -124,9 +130,9 @@ export function AccountGroupsPage() {
         description={t('accountGroups.description')}
         actions={
           <Button
-            disabled={refresh.busy || candidates.length === 0}
+            disabled={refresh.busy || refreshCandidates.length === 0}
             onClick={() =>
-              refresh.mutate(candidates.map((account) => account.id))
+              refresh.mutate(refreshCandidates.map((account) => account.id))
             }
           >
             {t(
@@ -165,7 +171,9 @@ export function AccountGroupsPage() {
           onValueChange={(value) => update({ platform: value ?? '' })}
         >
           <SelectTrigger aria-label={t('accountGroups.platform')}>
-            <SelectValue />
+            <SelectValue>
+              {search.platform || t('accountGroups.allPlatforms')}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value=''>{t('accountGroups.allPlatforms')}</SelectItem>
@@ -183,7 +191,9 @@ export function AccountGroupsPage() {
           }
         >
           <SelectTrigger aria-label={t('accountGroups.capability')}>
-            <SelectValue />
+            <SelectValue>
+              {t(`accountGroups.capabilities.${search.capability}`)}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {(['all', 'image', 'video'] as const).map((value) => (
@@ -198,7 +208,7 @@ export function AccountGroupsPage() {
           onValueChange={(value) => update({ sort: value as Search['sort'] })}
         >
           <SelectTrigger aria-label={t('accountGroups.sort')}>
-            <SelectValue />
+            <SelectValue>{t(`accountGroups.sorts.${search.sort}`)}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             {(['name', 'rate', 'rate-desc', 'site'] as const).map((value) => (
@@ -275,49 +285,42 @@ export function AccountGroupsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {candidates
-              .filter((account) =>
-                [siteMap.get(account.siteId)?.name, account.username]
-                  .join(' ')
-                  .toLowerCase()
-                  .includes(search.q.toLowerCase())
+            {refreshCandidates.map((account) => {
+              const snapshot = snapshotMap.get(account.id)
+              return (
+                <TableRow key={account.id}>
+                  <TableCell>{siteMap.get(account.siteId)?.name}</TableCell>
+                  <TableCell>{account.username ?? account.id}</TableCell>
+                  <TableCell>
+                    {snapshot?.attemptedAt
+                      ? new Date(snapshot.attemptedAt).toLocaleString()
+                      : '—'}
+                  </TableCell>
+                  <TableCell className='max-w-96 whitespace-normal'>
+                    {snapshot?.error ||
+                      (snapshot
+                        ? `${snapshot.groups.length} ${t('accountGroups.name')}`
+                        : t('accountGroups.notFetched'))}
+                    {snapshot?.error && snapshot.fetchedAt && (
+                      <p className='text-muted-foreground'>
+                        {t('accountGroups.lastSuccess')}:{' '}
+                        {new Date(snapshot.fetchedAt).toLocaleString()}
+                      </p>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      size='sm'
+                      variant='outline'
+                      disabled={refresh.busy}
+                      onClick={() => refresh.mutate([account.id])}
+                    >
+                      {t('accountGroups.refresh')}
+                    </Button>
+                  </TableCell>
+                </TableRow>
               )
-              .map((account) => {
-                const snapshot = snapshotMap.get(account.id)
-                return (
-                  <TableRow key={account.id}>
-                    <TableCell>{siteMap.get(account.siteId)?.name}</TableCell>
-                    <TableCell>{account.username ?? account.id}</TableCell>
-                    <TableCell>
-                      {snapshot?.attemptedAt
-                        ? new Date(snapshot.attemptedAt).toLocaleString()
-                        : '—'}
-                    </TableCell>
-                    <TableCell className='max-w-96 whitespace-normal'>
-                      {snapshot?.error ||
-                        (snapshot
-                          ? `${snapshot.groups.length} ${t('accountGroups.name')}`
-                          : t('accountGroups.notFetched'))}
-                      {snapshot?.error && snapshot.fetchedAt && (
-                        <p className='text-muted-foreground'>
-                          {t('accountGroups.lastSuccess')}:{' '}
-                          {new Date(snapshot.fetchedAt).toLocaleString()}
-                        </p>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        size='sm'
-                        variant='outline'
-                        disabled={refresh.busy}
-                        onClick={() => refresh.mutate([account.id])}
-                      >
-                        {t('accountGroups.refresh')}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
+            })}
           </TableBody>
         </Table>
       </div>

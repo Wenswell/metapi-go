@@ -73,6 +73,7 @@ var schemaTables = []schemaTable{
 	{"model_name_redirects", buildModelNameRedirectsDDL},
 	{"admin_audit_logs", buildAdminAuditLogsDDL},
 	{"model_probe_results", buildModelProbeResultsDDL},
+	{"model_test_results", buildModelTestResultsDDL},
 	{"catalog_sources", buildCatalogSourcesDDL},
 	{"admin_sessions", buildAdminSessionsDDL},
 	{"upstream_channels", buildUpstreamChannelsDDL},

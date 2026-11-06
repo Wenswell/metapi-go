@@ -801,3 +801,12 @@ func buildAccountGroupSnapshotsDDL(_ string) string {
    attempted_at TEXT NOT NULL, error TEXT NOT NULL DEFAULT ''
  )`
 }
+
+func buildModelTestResultsDDL(_ string) string {
+	return `CREATE TABLE IF NOT EXISTS model_test_results (
+ id TEXT PRIMARY KEY, batch_id TEXT NOT NULL, account_id INTEGER NOT NULL, site_id INTEGER NOT NULL,
+ site_name TEXT NOT NULL, account_name TEXT NOT NULL, model TEXT NOT NULL, type TEXT NOT NULL,
+ source TEXT NOT NULL, status TEXT NOT NULL, created_at TEXT NOT NULL, latency_ms BIGINT NOT NULL,
+ text TEXT NOT NULL, error TEXT NOT NULL, detail TEXT NOT NULL
+ )`
+}

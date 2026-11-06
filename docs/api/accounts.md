@@ -193,3 +193,21 @@ not proof that the remote credential is gone.
 **Body** (sync-all): `{ "wait": true }` (default `false` = background task). Wait mode returns `{ success, summary: { total, synced, skipped, failed, created, updated }, results: [...] }`; queued mode returns `202 { success, queued, reused, jobId, taskId, status, message }`.
 
 ---
+
+## Account groups
+
+- `GET /api/account-groups`: account snapshots as `{ accountId, groups, fetchedAt, attemptedAt, error }[]`. Each group includes `id`, `name`, `description`, `platform`, nullable `rate`/`imagePrice1k`/`imagePrice2k`, and `video`.
+- `POST /api/account-groups/refresh`: `{ accountIds: number[] }` starts a background task, returning HTTP 202 `{ taskId, reused }`. Read `/api/tasks/:id` for per-account results. Failed refreshes preserve the last successful snapshot and save the new error.
+- Both require admin authentication. Queries use account session credentials and site proxy settings; no routing or token mutations occur.
+
+## Model test jobs
+
+All endpoints require admin authentication. Tests call the account's API token or usable default account token, independently of route health probes.
+
+- `GET /api/model-tests/plan`: saved plan (or initial defaults).
+- `PUT /api/model-tests/plan`: replace the plan. Fields: `targets: { accountId, model, type }[]`, `textPrompts` (1–3 rounds), `imagePrompt`, `videoPrompt`, `codexPrompt`, `searchPrompt`, `imageMedia`, `videoMedia`, `timeoutSeconds` (1–600), `maxOutputTokens` (1–32768), `scheduleEnabled`, five-field `cron`, IANA `timezone`. Types: `text`, `image`, `video`, `codex`, `search`. Media accepts HTTP or base64 data URLs, at most 8 MiB each. Validation errors return 400.
+- `POST /api/model-tests/run`: run the saved plan; returns HTTP 202 `{ taskId, reused }`. The background task result includes `batchId`. Per-target failures are recorded in history; configuration/storage failures fail the task.
+- `GET /api/model-tests/history`: `{ items, total }`, 50 per page. Query: `page`, `q`, `siteTag`, `type`, `status` (`passed`/`partial`/`failed`), `batchId`, `from`/`to` (inclusive UTC dates, YYYY-MM-DD).
+- `GET /api/model-tests/history/:id`: full result, including JSON `detail` with saved input and individual rounds, response text, usage, timing and errors. List responses contain previews.
+
+Schedules use the saved targets and content, skip missed runs and prevent overlapping batches. API-only direct tests require a configured API token; OAuth accounts are not included in these protocols. Text and image use Chat Completions; video uses Gemini generateContent; Codex uses Responses SSE with a required completed event (the native Codex request does not send an output-token limit); search retains the complete Alpha Search JSON result for inspection.

@@ -11,6 +11,10 @@ This list is checked against the routes reachable from `router.New` by `docs/api
 
 ### GET
 
+- `/api/model-tests/plan`
+- `/api/model-tests/history`
+- `/api/model-tests/history/:id`
+
 - `/api/account-groups`
 
 - `/api/user/budget`
@@ -131,6 +135,8 @@ This list is checked against the routes reachable from `router.New` by `docs/api
 - `/api/update-center/status`
 ### POST
 
+- `/api/model-tests/run`
+
 - `/api/account-groups/refresh`
 
 - `/api/admin/users/:userId/budget/reconcile`
@@ -238,6 +244,8 @@ This list is checked against the routes reachable from `router.New` by `docs/api
 - `/api/sites/import`
 - `/api/test/chat`
 ### PUT
+
+- `/api/model-tests/plan`
 
 - `/api/admin/users/:userId/budget`
 - `/api/admin/user-groups/:groupId/pricing`

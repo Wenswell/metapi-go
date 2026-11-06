@@ -100,6 +100,7 @@ func buildSchedulers(cfg *config.Config) (
 	modelProbe := scheduler.NewModelProbeScheduler(cfg)
 	WireModelProbeScheduler(modelProbe)
 	newRegistry.Register(modelProbe)
+	newRegistry.Register(scheduler.NewModelTestingScheduler())
 
 	// ---- Scheduler 8: Channel Recovery ----
 	newRegistry.Register(scheduler.NewChannelRecoveryScheduler(cfg))

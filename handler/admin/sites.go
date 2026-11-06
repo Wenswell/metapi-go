@@ -533,6 +533,10 @@ func (h *sitesHandler) updateSite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if body.Tags != nil {
+		globalAccountsCache.clear()
+	}
+
 	// Apply status side effects
 	if newStatus, ok := updates["status"].(string); ok {
 		service.ApplySiteStatusSideEffects(h.db, id, existing.Name, newStatus)

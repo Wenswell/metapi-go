@@ -23,6 +23,7 @@ import { Route as AuthenticatedDashboardRouteRouteImport } from './routes/_authe
 import { Route as AuthenticatedDownstreamKeysRouteImport } from './routes/_authenticated/downstream-keys'
 import { Route as AuthenticatedFixCandidatesRouteImport } from './routes/_authenticated/fix-candidates'
 import { Route as AuthenticatedModelTesterRouteImport } from './routes/_authenticated/model-tester'
+import { Route as AuthenticatedModelTestsRouteImport } from './routes/_authenticated/model-tests'
 import { Route as AuthenticatedModelsRouteImport } from './routes/_authenticated/models'
 import { Route as AuthenticatedOauthRouteImport } from './routes/_authenticated/oauth'
 import { Route as AuthenticatedObservabilityRouteImport } from './routes/_authenticated/observability'
@@ -114,6 +115,11 @@ const AuthenticatedModelTesterRoute =
     path: '/model-tester',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedModelTestsRoute = AuthenticatedModelTestsRouteImport.update({
+  id: '/model-tests',
+  path: '/model-tests',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedModelsRoute = AuthenticatedModelsRouteImport.update({
   id: '/models',
   path: '/models',
@@ -221,6 +227,7 @@ export interface FileRoutesByFullPath {
   '/downstream-keys': typeof AuthenticatedDownstreamKeysRoute
   '/fix-candidates': typeof AuthenticatedFixCandidatesRoute
   '/model-tester': typeof AuthenticatedModelTesterRoute
+  '/model-tests': typeof AuthenticatedModelTestsRoute
   '/models': typeof AuthenticatedModelsRoute
   '/oauth': typeof AuthenticatedOauthRoute
   '/observability': typeof AuthenticatedObservabilityRoute
@@ -249,6 +256,7 @@ export interface FileRoutesByTo {
   '/downstream-keys': typeof AuthenticatedDownstreamKeysRoute
   '/fix-candidates': typeof AuthenticatedFixCandidatesRoute
   '/model-tester': typeof AuthenticatedModelTesterRoute
+  '/model-tests': typeof AuthenticatedModelTestsRoute
   '/models': typeof AuthenticatedModelsRoute
   '/oauth': typeof AuthenticatedOauthRoute
   '/observability': typeof AuthenticatedObservabilityRoute
@@ -281,6 +289,7 @@ export interface FileRoutesById {
   '/_authenticated/downstream-keys': typeof AuthenticatedDownstreamKeysRoute
   '/_authenticated/fix-candidates': typeof AuthenticatedFixCandidatesRoute
   '/_authenticated/model-tester': typeof AuthenticatedModelTesterRoute
+  '/_authenticated/model-tests': typeof AuthenticatedModelTestsRoute
   '/_authenticated/models': typeof AuthenticatedModelsRoute
   '/_authenticated/oauth': typeof AuthenticatedOauthRoute
   '/_authenticated/observability': typeof AuthenticatedObservabilityRoute
@@ -315,6 +324,7 @@ export interface FileRouteTypes {
     | '/downstream-keys'
     | '/fix-candidates'
     | '/model-tester'
+    | '/model-tests'
     | '/models'
     | '/oauth'
     | '/observability'
@@ -343,6 +353,7 @@ export interface FileRouteTypes {
     | '/downstream-keys'
     | '/fix-candidates'
     | '/model-tester'
+    | '/model-tests'
     | '/models'
     | '/oauth'
     | '/observability'
@@ -374,6 +385,7 @@ export interface FileRouteTypes {
     | '/_authenticated/downstream-keys'
     | '/_authenticated/fix-candidates'
     | '/_authenticated/model-tester'
+    | '/_authenticated/model-tests'
     | '/_authenticated/models'
     | '/_authenticated/oauth'
     | '/_authenticated/observability'
@@ -496,6 +508,13 @@ declare module '@tanstack/react-router' {
       path: '/model-tester'
       fullPath: '/model-tester'
       preLoaderRoute: typeof AuthenticatedModelTesterRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/model-tests': {
+      id: '/_authenticated/model-tests'
+      path: '/model-tests'
+      fullPath: '/model-tests'
+      preLoaderRoute: typeof AuthenticatedModelTestsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/models': {
@@ -676,6 +695,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDownstreamKeysRoute: typeof AuthenticatedDownstreamKeysRoute
   AuthenticatedFixCandidatesRoute: typeof AuthenticatedFixCandidatesRoute
   AuthenticatedModelTesterRoute: typeof AuthenticatedModelTesterRoute
+  AuthenticatedModelTestsRoute: typeof AuthenticatedModelTestsRoute
   AuthenticatedModelsRoute: typeof AuthenticatedModelsRoute
   AuthenticatedOauthRoute: typeof AuthenticatedOauthRoute
   AuthenticatedObservabilityRoute: typeof AuthenticatedObservabilityRoute
@@ -701,6 +721,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDownstreamKeysRoute: AuthenticatedDownstreamKeysRoute,
   AuthenticatedFixCandidatesRoute: AuthenticatedFixCandidatesRoute,
   AuthenticatedModelTesterRoute: AuthenticatedModelTesterRoute,
+  AuthenticatedModelTestsRoute: AuthenticatedModelTestsRoute,
   AuthenticatedModelsRoute: AuthenticatedModelsRoute,
   AuthenticatedOauthRoute: AuthenticatedOauthRoute,
   AuthenticatedObservabilityRoute: AuthenticatedObservabilityRoute,

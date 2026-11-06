@@ -19,6 +19,7 @@ documents never deep-link into `internal/` — they state the fact directly.
 | Install / Compose / upgrade / rollback | [`deployment.md`](deployment.md)                                                      |
 | Environment variable reference      | [`configuration.md`](configuration.md)                                                   |
 | Client wiring (Cursor etc.)         | [`client-integration.md`](client-integration.md)                                         |
+| Site tags, upstream groups and scheduled model tests | [`management-extensions.md`](management-extensions.md) |
 | Common questions                    | [`faq.md`](faq.md)                                                                       |
 | HTTP API surface (index + by-domain) | [`api.md`](api.md) · [`api/`](api/)                                                        |
 | Trust boundaries, controls and deliberate limits | [`security-model.md`](security-model.md)                                      |

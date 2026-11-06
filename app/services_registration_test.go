@@ -27,6 +27,7 @@ func TestBuildSchedulersRegistration(t *testing.T) {
 		"backup-webdav",
 		"site-announcement",
 		"model-probe",
+		"model-testing",
 		"channel-recovery",
 		"sub2api-refresh",
 		"proxy-video-task-retention",

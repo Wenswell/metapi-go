@@ -190,5 +190,6 @@ func (h *tagsHandler) updateSiteTags(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"message": "failed to update site tags"})
 		return
 	}
+	globalAccountsCache.clear()
 	writeJSON(w, http.StatusOK, map[string]any{"success": true, "tags": tags})
 }

@@ -658,6 +658,12 @@ var enterpriseAdditiveSteps = []AdditiveStep{
 		_, err := db.Exec(buildAccountGroupSnapshotsDDL(db.Dialect))
 		return err
 	}},
+	{Version: "local_002_model_test_results", Description: "persistent account model test history", Apply: func(db *DB) error {
+		if _, err := db.Exec(buildModelTestResultsDDL(db.Dialect)); err != nil {
+			return err
+		}
+		return EnsureIndex(db, "model_test_results_created_at_idx", `CREATE INDEX IF NOT EXISTS model_test_results_created_at_idx ON model_test_results(created_at)`)
+	}},
 }
 
 // schemaMigrationsDDL creates the version bookkeeping table.

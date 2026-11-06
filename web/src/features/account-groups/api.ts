@@ -15,7 +15,6 @@ const groupSchema = z.object({
   imagePrice2k: z.number().nullable(),
   video: z.boolean(),
 })
-export type AccountGroup = z.infer<typeof groupSchema>
 const snapshotsSchema = z.array(
   z.object({
     accountId: z.number(),

@@ -110,6 +110,11 @@ export const ROOT_NAVIGATION: SidebarData = {
           icon: FlaskConical,
         },
         {
+          title: 'modelTests.title',
+          url: '/model-tests',
+          icon: FlaskConical,
+        },
+        {
           title: 'sidebar.items.priceCompare',
           url: '/price-compare',
           icon: Scale,

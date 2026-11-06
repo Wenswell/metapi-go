@@ -39,6 +39,9 @@ func RefreshAccountGroupDetails(ctx context.Context, db *sqlx.DB, cfg *config.Co
 	if err != nil {
 		return err
 	}
+	if err := db.Get(&row.Site, db.Rebind("SELECT "+SiteSelectColumns+" FROM sites WHERE id=?"), row.Account.SiteID); err != nil {
+		return err
+	}
 	var groups []platform.AccountGroupDetail
 	switch {
 	case row.Account.Status != "active" || row.Site.Status == "disabled":

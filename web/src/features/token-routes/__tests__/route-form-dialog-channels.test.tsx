@@ -151,7 +151,11 @@ describe('RouteFormDialog channel drafts', () => {
     const tagOption = await screen.findByRole('option', { name: '公益' })
     fireEvent.pointerDown(tagOption)
     fireEvent.click(tagOption)
-    await waitFor(() => expect(screen.queryByRole('checkbox', { name: 'paid-two' })).not.toBeInTheDocument())
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('checkbox', { name: 'paid-two' })
+      ).not.toBeInTheDocument()
+    )
     fireEvent.change(
       screen.getByRole('searchbox', { name: /Search accounts/ }),
       { target: { value: 'one' } }

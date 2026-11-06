@@ -3,8 +3,11 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/deliciousbuding/metapi-go/internal/pgtest"
+	"github.com/deliciousbuding/metapi-go/store"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -14,6 +17,25 @@ import (
 
 func TestAccountGroupSnapshotRefresh(t *testing.T) {
 	db := openTestDB(t)
+	testAccountGroupSnapshotRefresh(t, db)
+}
+func TestAccountGroupSnapshotRefreshPostgres(t *testing.T) {
+	dsn := os.Getenv("PG_TEST_DSN")
+	if dsn == "" {
+		t.Skip("PG_TEST_DSN not set")
+	}
+	db, err := store.Open(store.DialectPostgres, dsn, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	pgtest.Reset(t, db.DB)
+	if err = store.AutoMigrate(db); err != nil {
+		t.Fatal(err)
+	}
+	testAccountGroupSnapshotRefresh(t, db)
+}
+func testAccountGroupSnapshotRefresh(t *testing.T, db *store.DB) {
 	var fail atomic.Bool
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if fail.Load() {
@@ -24,8 +46,13 @@ func TestAccountGroupSnapshotRefresh(t *testing.T) {
 		fmt.Fprint(w, `{"success":true,"data":{"public":{"ratio":1}}}`)
 	}))
 	defer server.Close()
-	site := createTestSite(t, db, "groups", server.URL, "new-api")
-	account := createTestAccount(t, db, site, strPtr("groups-user"), "synthetic-session")
+	var site, account int64
+	if err := db.Get(&site, db.Rebind(`INSERT INTO sites(name,url,platform,created_at,updated_at) VALUES (?,?,?,'2026-11-06','2026-11-06') RETURNING id`), "groups", server.URL, "new-api"); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.Get(&account, db.Rebind(`INSERT INTO accounts(site_id,username,access_token,status,created_at,updated_at) VALUES (?,?,?,'active','2026-11-06','2026-11-06') RETURNING id`), site, "groups-user", "synthetic-session"); err != nil {
+		t.Fatal(err)
+	}
 	if err := RefreshAccountGroupDetails(context.Background(), db.DB, &config.Config{}, account); err != nil {
 		t.Fatal(err)
 	}

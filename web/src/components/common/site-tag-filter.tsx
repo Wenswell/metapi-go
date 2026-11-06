@@ -21,7 +21,7 @@ export function SiteTagFilter({
   return (
     <Select value={value} onValueChange={(next) => onChange(next ?? '')}>
       <SelectTrigger aria-label={t('siteTags.filter')}>
-        <SelectValue />
+        <SelectValue>{value || t('siteTags.all')}</SelectValue>
       </SelectTrigger>
       <SelectContent>
         <SelectItem value=''>{t('siteTags.all')}</SelectItem>
