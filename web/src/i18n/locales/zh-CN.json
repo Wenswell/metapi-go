@@ -5084,7 +5084,7 @@
       "account": "站点 / 账号",
       "remove": "移除",
       "content": "测试内容与计划",
-      "mediaHint": "图片/视频素材支持 HTTP URL 或 base64 data URL。URL 交由上游读取。文本每行一轮，最多三轮。",
+      "mediaHint": "选择文件或填写素材 URL，图片/视频使用保存的默认素材。",
       "scheduleHint": "五段 cron，例如 0 9 * * * 表示每天 09:00；按指定时区执行。停机期间不补跑，执行中的批次不重叠。",
       "fields": {
         "textPrompts": "文本提示词（每行一轮）",
@@ -5098,7 +5098,10 @@
         "timezone": "IANA 时区",
         "timeoutSeconds": "单个目标超时（秒）",
         "maxOutputTokens": "最大输出 tokens",
-        "scheduleEnabled": "启用定时测试"
+        "scheduleEnabled": "启用定时测试",
+        "systemPrompt": "文本系统提示词",
+        "videoSystemPrompt": "视频系统提示词",
+        "codexSystemPrompt": "Codex 系统提示词"
       },
       "history": "测试历史",
       "search": "搜索模型、站点、账号、响应或错误",
@@ -5127,7 +5130,16 @@
       "round": "第 {{count}} 轮",
       "inputTokens": "输入 tokens",
       "outputTokens": "输出 tokens",
-      "prompt": "提示词"
+      "prompt": "提示词",
+      "uploadMedia": "选择素材文件",
+      "mediaPreview": "素材预览",
+      "mediaSizeError": "请选择对应类型的文件，最大 6 MiB。",
+      "mediaReadError": "文件读取失败，请重新选择。",
+      "noModels": "先选择账号；若无模型，请在账号详情中从上游刷新模型。",
+      "newsSource": "新闻源",
+      "newsHint": "在提示词中使用 {NEWS-TODAY} 插入新闻摘要；仅提供这两个固定来源。",
+      "newsPreview": "预览新闻摘要",
+      "systemPrompt": "系统提示词"
     }
   }
 }

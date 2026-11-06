@@ -12,6 +12,7 @@ This list is checked against the routes reachable from `router.New` by `docs/api
 ### GET
 
 - `/api/model-tests/plan`
+- `/api/model-tests/news-preview`
 - `/api/model-tests/history`
 - `/api/model-tests/history/:id`
 

@@ -5084,7 +5084,7 @@
       "account": "Site / account",
       "remove": "Remove",
       "content": "Content and schedule",
-      "mediaHint": "Image/video media accepts HTTP URLs or base64 data URLs. URLs are read by the upstream. Text uses one round per line, up to three rounds.",
+      "mediaHint": "Choose a file or enter its URL. Tests use the saved default image or video.",
       "scheduleHint": "Five-field cron, e.g. 0 9 * * * runs at 09:00 daily in the specified timezone. Missed runs are skipped; batches do not overlap.",
       "fields": {
         "textPrompts": "Text prompts (one round per line)",
@@ -5098,7 +5098,10 @@
         "timezone": "IANA timezone",
         "timeoutSeconds": "Timeout per target (seconds)",
         "maxOutputTokens": "Maximum output tokens",
-        "scheduleEnabled": "Enable scheduled tests"
+        "scheduleEnabled": "Enable scheduled tests",
+        "systemPrompt": "Text system prompt",
+        "videoSystemPrompt": "Video system prompt",
+        "codexSystemPrompt": "Codex system prompt"
       },
       "history": "Test history",
       "search": "Search models, sites, accounts, responses or errors",
@@ -5127,7 +5130,16 @@
       "round": "Round {{count}}",
       "inputTokens": "Input tokens",
       "outputTokens": "Output tokens",
-      "prompt": "Prompt"
+      "prompt": "Prompt",
+      "uploadMedia": "Choose media file",
+      "mediaPreview": "Media preview",
+      "mediaSizeError": "Choose a matching file up to 6 MiB.",
+      "mediaReadError": "File could not be read. Choose it again.",
+      "noModels": "Select accounts first. If models are missing, refresh them from upstream in account details.",
+      "newsSource": "News source",
+      "newsHint": "Use {NEWS-TODAY} in prompts to insert the news digest. Choose one of the two fixed sources.",
+      "newsPreview": "Preview news digest",
+      "systemPrompt": "System prompt"
     }
   }
 }

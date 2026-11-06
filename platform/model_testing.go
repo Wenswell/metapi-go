@@ -17,6 +17,7 @@ import (
 
 // ModelTestInput is a single test with one or more text rounds.
 type ModelTestInput struct {
+	SystemPrompt    string   `json:"systemPrompt"`
 	Type            string   `json:"type"`
 	Model           string   `json:"model"`
 	Prompts         []string `json:"prompts"`
@@ -35,6 +36,9 @@ type ModelTestRound struct {
 func ExecuteModelTest(ctx context.Context, baseURL, token string, input ModelTestInput, proxy *ProxyConfig) []ModelTestRound {
 	rounds := []ModelTestRound{}
 	messages := []any{}
+	if input.SystemPrompt != "" {
+		messages = append(messages, map[string]any{"role": "system", "content": input.SystemPrompt})
+	}
 	for _, prompt := range input.Prompts {
 		messages = append(messages, map[string]any{"role": "user", "content": prompt})
 		started := time.Now()
@@ -88,6 +92,14 @@ func executeModelTestRound(ctx context.Context, baseURL, token string, input Mod
 			metadata, _ := json.Marshal(map[string]any{"session_id": session, "thread_id": session, "turn_id": turn})
 			headers["x-codex-turn-metadata"] = string(metadata)
 			body = map[string]any{"model": input.Model, "stream": true, "store": false, "prompt_cache_key": session, "reasoning": map[string]any{"effort": "low", "summary": "auto"}, "tool_choice": "auto", "parallel_tool_calls": true, "include": []string{"reasoning.encrypted_content"}, "tools": []any{map[string]any{"type": "web_search", "external_web_access": true}}, "input": []any{message}}
+		}
+	}
+	if input.SystemPrompt != "" {
+		if input.Type == "video" {
+			body["systemInstruction"] = map[string]any{"parts": []any{map[string]any{"text": input.SystemPrompt}}}
+		}
+		if input.Type == "codex" {
+			body["input"] = append([]any{map[string]any{"type": "message", "role": "developer", "content": []any{map[string]any{"type": "input_text", "text": input.SystemPrompt}}}}, body["input"].([]any)...)
 		}
 	}
 	encoded, err := json.Marshal(body)

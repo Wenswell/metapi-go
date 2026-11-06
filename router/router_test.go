@@ -100,7 +100,8 @@ func assertCSPPolicy(t *testing.T, csp string) {
 	wantStatic := map[string][]string{
 		"default-src":     {"'self'"},
 		"script-src":      {"'self'"},
-		"img-src":         {"'self'", "https://api.dicebear.com"},
+		"img-src":         {"'self'", "http:", "https:", "data:"},
+		"media-src":       {"'self'", "http:", "https:", "data:"},
 		"connect-src":     {"'self'"},
 		"frame-src":       {"'self'", "https://check.linux.do"},
 		"frame-ancestors": {"'none'"},

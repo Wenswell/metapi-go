@@ -5,6 +5,10 @@ import { request, buildQueryString } from '@/lib/api/transport'
 
 export const testTypes = ['text', 'image', 'video', 'codex', 'search'] as const
 export const planSchema = z.object({
+  systemPrompt: z.string(),
+  videoSystemPrompt: z.string(),
+  codexSystemPrompt: z.string(),
+  newsSource: z.enum(['', 'rss', 'spaceflight']),
   targets: z
     .array(
       z.object({

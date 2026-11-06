@@ -1,11 +1,18 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  useQueries,
+} from '@tanstack/react-query'
 import { useNavigate, useSearch } from '@tanstack/react-router'
-import { useState } from 'react'
+import type { ColumnDef } from '@tanstack/react-table'
+import { useState, useMemo } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { z } from 'zod'
 
+import { ManagementTable } from '@/components/common/management-table'
 import { PageHeader } from '@/components/common/page-header'
 import { SiteTagFilter } from '@/components/common/site-tag-filter'
 import { Button } from '@/components/ui/button'
@@ -33,16 +40,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import { Textarea } from '@/components/ui/textarea'
-import { useAccounts } from '@/features/accounts'
+import { useAccounts, accountModelsQueryOptions } from '@/features/accounts'
 import { useSites } from '@/features/sites'
 import { api } from '@/lib/api'
 import { request } from '@/lib/api/transport'
@@ -50,6 +49,7 @@ import { toast } from '@/lib/toast'
 
 import {
   planSchema,
+  type resultSchema,
   testKeys,
   testTypes,
   useSaveTestPlan,
@@ -57,12 +57,15 @@ import {
   useTestPlan,
   type TestPlan,
 } from './api'
+import { MediaField } from './media-field'
 import type { modelTestsSearchSchema } from './search'
 import { TestResultDetail } from './test-result-detail'
 
+const EMPTY_TARGETS: TestPlan['targets'] = []
+const EMPTY_HISTORY: z.infer<typeof resultSchema>[] = []
 type Search = z.infer<typeof modelTestsSearchSchema>
 const editorSchema = planSchema.extend({
-  draftModel: z.string(),
+  draftModels: z.array(z.string()),
   draftType: z.enum(testTypes),
 })
 type Editor = z.infer<typeof editorSchema>
@@ -92,7 +95,11 @@ function ModelTestsEditor({ initialPlan }: { initialPlan: TestPlan }) {
   const navigate = useNavigate({ from: '/model-tests' })
   const update = (patch: Partial<Search>) =>
     void navigate({
-      search: (previous) => ({ ...previous, ...patch, page: patch.page ?? 1 }),
+      search: (previous) => ({
+        ...previous,
+        ...patch,
+        testHistoryPage: patch.testHistoryPage ?? 1,
+      }),
       replace: true,
     })
   const plan = useTestPlan(),
@@ -101,9 +108,10 @@ function ModelTestsEditor({ initialPlan }: { initialPlan: TestPlan }) {
     sites = useSites()
   const form = useForm<Editor>({
     resolver: zodResolver(editorSchema),
-    defaultValues: { ...initialPlan, draftModel: '', draftType: 'text' },
+    defaultValues: { ...initialPlan, draftModels: [], draftType: 'text' },
   })
-  const targets = useWatch({ control: form.control, name: 'targets' }) ?? []
+  const targets =
+    useWatch({ control: form.control, name: 'targets' }) ?? EMPTY_TARGETS
   const [selected, setSelected] = useState<number[]>([])
   const [taskId, setTaskId] = useState<string | null>(null)
   const [detailId, setDetailId] = useState<string | null>(null)
@@ -137,20 +145,29 @@ function ModelTestsEditor({ initialPlan }: { initialPlan: TestPlan }) {
       !['succeeded', 'failed'].includes(task.data?.status ?? ''))
   const history = useTestHistory(
     {
-      q: search.q,
+      q: [search.q, search.testHistoryQ].filter(Boolean).join(' '),
       siteTag: search.siteTag,
       type: search.type,
       status: search.status,
       from: search.from,
       to: search.to,
       batchId: search.batchId,
-      page: search.page,
+      page: search.testHistoryPage,
+      pageSize: search.testHistorySize,
+      sort: search.testHistorySort,
     },
     busy
   )
-  const siteMap = new Map((sites.data ?? []).map((site) => [site.id, site]))
-  const accountMap = new Map(
-    (accounts.data?.accounts ?? []).map((account) => [account.id, account])
+  const siteMap = useMemo(
+    () => new Map((sites.data ?? []).map((site) => [site.id, site])),
+    [sites.data]
+  )
+  const accountMap = useMemo(
+    () =>
+      new Map(
+        (accounts.data?.accounts ?? []).map((account) => [account.id, account])
+      ),
+    [accounts.data]
   )
   const tags = (sites.data ?? []).flatMap((site) => site.tags ?? [])
   const candidates = (accounts.data?.accounts ?? []).filter((account) => {
@@ -163,25 +180,47 @@ function ModelTestsEditor({ initialPlan }: { initialPlan: TestPlan }) {
         .includes(search.targetQ.toLowerCase())
     )
   })
+  const modelQueries = useQueries({
+    queries: selected.map(accountModelsQueryOptions),
+  })
+  const modelChoices = [
+    ...new Set(
+      modelQueries.flatMap((query) =>
+        (query.data?.models ?? [])
+          .filter((model) => model.available && !model.disabled)
+          .map((model) => model.name)
+      )
+    ),
+  ].sort()
   const addTargets = () => {
-    const model = form.getValues('draftModel').trim(),
+    const models = form.getValues('draftModels'),
       type = form.getValues('draftType')
-    if (!model || selected.length === 0) {
+    if (!models.length || !selected.length) {
       toast.error(t('modelTests.chooseTarget'))
       return
     }
     const next = [...targets]
-    for (const accountId of selected) {
-      if (
-        !next.some(
-          (target) =>
-            target.accountId === accountId &&
-            target.model === model &&
-            target.type === type
+    selected.forEach((accountId, index) => {
+      const available = modelQueries[index].data?.models ?? []
+      for (const model of models) {
+        if (
+          !available.some(
+            (entry) =>
+              entry.name === model && entry.available && !entry.disabled
+          )
         )
-      )
-        next.push({ accountId, model, type })
-    }
+          continue
+        if (
+          !next.some(
+            (entry) =>
+              entry.accountId === accountId &&
+              entry.model === model &&
+              entry.type === type
+          )
+        )
+          next.push({ accountId, model, type })
+      }
+    })
     form.setValue('targets', next, { shouldDirty: true, shouldValidate: true })
   }
   const submit = form.handleSubmit(async (values) => {
@@ -189,10 +228,111 @@ function ModelTestsEditor({ initialPlan }: { initialPlan: TestPlan }) {
     await save.mutateAsync(payload)
     form.reset({
       ...payload,
-      draftModel: form.getValues('draftModel'),
+      draftModels: form.getValues('draftModels'),
       draftType: form.getValues('draftType'),
     })
     toast.success(t('modelTests.saved'))
+  })
+  const targetRows = useMemo(
+    () =>
+      targets.map((target) => {
+        const account = accountMap.get(target.accountId)
+        return {
+          ...target,
+          account: `${siteMap.get(account?.siteId ?? 0)?.name ?? ''} / ${account?.username ?? target.accountId}`,
+        }
+      }),
+    [targets, accountMap, siteMap]
+  )
+  const targetColumns = useMemo<ColumnDef<(typeof targetRows)[number]>[]>(
+    () => [
+      { accessorKey: 'account', header: t('modelTests.account') },
+      { accessorKey: 'model', header: t('modelTests.model') },
+      {
+        accessorKey: 'type',
+        header: t('modelTests.type'),
+        cell: ({ row }) => t(`modelTests.types.${row.original.type}`),
+      },
+      {
+        id: 'remove',
+        header: t('modelTests.remove'),
+        enableSorting: false,
+        cell: ({ row }) => (
+          <Button
+            type='button'
+            size='sm'
+            variant='ghost'
+            onClick={() =>
+              form.setValue(
+                'targets',
+                targets.filter(
+                  (target) =>
+                    !(
+                      target.accountId === row.original.accountId &&
+                      target.model === row.original.model &&
+                      target.type === row.original.type
+                    )
+                ),
+                { shouldDirty: true }
+              )
+            }
+          >
+            {t('modelTests.remove')}
+          </Button>
+        ),
+      },
+    ],
+    [t, targets, form]
+  )
+  const historyColumns = useMemo<ColumnDef<z.infer<typeof resultSchema>>[]>(
+    () => [
+      {
+        accessorKey: 'createdAt',
+        header: t('modelTests.created'),
+        cell: ({ row }) => new Date(row.original.createdAt).toLocaleString(),
+      },
+      {
+        id: 'account',
+        accessorFn: (row) => `${row.siteName} / ${row.accountName}`,
+        header: t('modelTests.account'),
+      },
+      { accessorKey: 'model', header: t('modelTests.model') },
+      {
+        accessorKey: 'type',
+        header: t('modelTests.type'),
+        cell: ({ row }) => t(`modelTests.types.${row.original.type}`),
+      },
+      {
+        accessorKey: 'status',
+        header: t('modelTests.status'),
+        cell: ({ row }) => t(`modelTests.statuses.${row.original.status}`),
+      },
+      { accessorKey: 'latencyMs', header: t('modelTests.latency') },
+      {
+        accessorKey: 'text',
+        header: t('modelTests.response'),
+        enableSorting: false,
+        cell: ({ row }) => (
+          <Button
+            type='button'
+            variant='link'
+            className='max-w-80 truncate'
+            onClick={() => setDetailId(row.original.id)}
+          >
+            {row.original.error || row.original.text || t('modelTests.detail')}
+          </Button>
+        ),
+      },
+    ],
+    [t]
+  )
+  const [newsPreview, setNewsPreview] = useState('')
+  const news = useMutation({
+    mutationFn: () =>
+      request<{ digest: string }>(
+        `/api/model-tests/news-preview?source=${form.getValues('newsSource')}`
+      ),
+    onSuccess: (data) => setNewsPreview(data.digest),
   })
   const errors = [
     plan.error,
@@ -298,13 +438,54 @@ function ModelTestsEditor({ initialPlan }: { initialPlan: TestPlan }) {
             <div className='flex flex-wrap items-end gap-2'>
               <FormField
                 control={form.control}
-                name='draftModel'
+                name='draftModels'
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t('modelTests.model')}</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
+                    <div
+                      className='grid max-h-48 gap-2 overflow-y-auto rounded-md border p-3'
+                      role='group'
+                      aria-label={t('modelTests.model')}
+                    >
+                      {modelChoices.map((model) => (
+                        <label
+                          key={model}
+                          className='flex items-center gap-2 text-sm'
+                        >
+                          <Checkbox
+                            checked={field.value.includes(model)}
+                            onCheckedChange={(checked) =>
+                              field.onChange(
+                                checked
+                                  ? [...field.value, model]
+                                  : field.value.filter((name) => name !== model)
+                              )
+                            }
+                          />
+                          {model}
+                        </label>
+                      ))}
+                      {!modelChoices.length && (
+                        <p className='text-muted-foreground text-sm'>
+                          {t(
+                            modelQueries.some((query) => query.isLoading)
+                              ? 'modelTests.loading'
+                              : 'modelTests.noModels'
+                          )}
+                        </p>
+                      )}
+                      {modelQueries
+                        .filter((query) => query.error)
+                        .map((query, index) => (
+                          <p
+                            key={index}
+                            role='alert'
+                            className='text-destructive'
+                          >
+                            {String(query.error)}
+                          </p>
+                        ))}
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -348,56 +529,72 @@ function ModelTestsEditor({ initialPlan }: { initialPlan: TestPlan }) {
                 </FormItem>
               )}
             />
-            <div className='overflow-x-auto'>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    {['account', 'model', 'type', 'remove'].map((key) => (
-                      <TableHead key={key}>{t(`modelTests.${key}`)}</TableHead>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {targets.map((target, index) => {
-                    const account = accountMap.get(target.accountId)
-                    return (
-                      <TableRow
-                        key={`${target.accountId}:${target.model}:${target.type}`}
-                      >
-                        <TableCell>
-                          {siteMap.get(account?.siteId ?? 0)?.name} /{' '}
-                          {account?.username ?? target.accountId}
-                        </TableCell>
-                        <TableCell>{target.model}</TableCell>
-                        <TableCell>
-                          {t(`modelTests.types.${target.type}`)}
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            type='button'
-                            size='sm'
-                            variant='ghost'
-                            onClick={() =>
-                              form.setValue(
-                                'targets',
-                                targets.filter((_, i) => i !== index),
-                                { shouldDirty: true }
-                              )
-                            }
-                          >
-                            {t('modelTests.remove')}
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
-            </div>
+            <ManagementTable
+              name='testTargets'
+              data={targetRows}
+              columns={targetColumns}
+            />
             <h2 className='font-semibold'>{t('modelTests.content')}</h2>
             <p className='text-muted-foreground text-sm'>
               {t('modelTests.mediaHint')}
             </p>
+            <FormField
+              control={form.control}
+              name='newsSource'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('modelTests.newsSource')}</FormLabel>
+                  <Select
+                    value={field.value}
+                    onValueChange={(value) => {
+                      field.onChange(value)
+                      setNewsPreview('')
+                    }}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue>
+                          {field.value === 'spaceflight'
+                            ? 'Spaceflight News API'
+                            : 'Hacker News RSS'}
+                        </SelectValue>
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value='rss'>
+                        Hacker News RSS · https://hnrss.org/frontpage
+                      </SelectItem>
+                      <SelectItem value='spaceflight'>
+                        Spaceflight ·
+                        https://api.spaceflightnewsapi.net/v4/articles/?limit=20
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <p className='text-muted-foreground text-sm'>
+              {t('modelTests.newsHint')}
+            </p>
+            <Button
+              type='button'
+              variant='outline'
+              disabled={news.isPending}
+              onClick={() => news.mutate()}
+            >
+              {t('modelTests.newsPreview')}
+            </Button>
+            {news.error && (
+              <p role='alert' className='text-destructive'>
+                {String(news.error)}
+              </p>
+            )}
+            {newsPreview && (
+              <pre className='max-h-64 overflow-auto rounded-md border p-3 text-sm whitespace-pre-wrap'>
+                {newsPreview}
+              </pre>
+            )}
             <div className='grid gap-4 md:grid-cols-2'>
               <FormField
                 control={form.control}
@@ -420,12 +617,13 @@ function ModelTestsEditor({ initialPlan }: { initialPlan: TestPlan }) {
               />
               {(
                 [
+                  'systemPrompt',
+                  'videoSystemPrompt',
+                  'codexSystemPrompt',
                   'imagePrompt',
                   'videoPrompt',
                   'codexPrompt',
                   'searchPrompt',
-                  'imageMedia',
-                  'videoMedia',
                   'cron',
                   'timezone',
                 ] as const
@@ -437,7 +635,7 @@ function ModelTestsEditor({ initialPlan }: { initialPlan: TestPlan }) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>{t(`modelTests.fields.${name}`)}</FormLabel>
-                      {name.endsWith('Media') || name.endsWith('Prompt') ? (
+                      {name.endsWith('Prompt') ? (
                         <FormControl>
                           <Textarea {...field} />
                         </FormControl>
@@ -446,6 +644,26 @@ function ModelTestsEditor({ initialPlan }: { initialPlan: TestPlan }) {
                           <Input {...field} />
                         </FormControl>
                       )}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ))}
+              {(['imageMedia', 'videoMedia'] as const).map((name) => (
+                <FormField
+                  key={name}
+                  control={form.control}
+                  name={name}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t(`modelTests.fields.${name}`)}</FormLabel>
+                      <FormControl>
+                        <MediaField
+                          kind={name === 'imageMedia' ? 'image' : 'video'}
+                          value={field.value}
+                          onChange={field.onChange}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -584,77 +802,13 @@ function ModelTestsEditor({ initialPlan }: { initialPlan: TestPlan }) {
           {t('modelTests.refresh')}
         </Button>
       </div>
-      <div className='overflow-x-auto rounded-md border'>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {[
-                'created',
-                'account',
-                'model',
-                'type',
-                'status',
-                'latency',
-                'response',
-              ].map((key) => (
-                <TableHead key={key}>{t(`modelTests.${key}`)}</TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {history.data?.items.map((result) => (
-              <TableRow key={result.id}>
-                <TableCell>
-                  {new Date(result.createdAt).toLocaleString()}
-                </TableCell>
-                <TableCell>
-                  {result.siteName} / {result.accountName}
-                </TableCell>
-                <TableCell>{result.model}</TableCell>
-                <TableCell>{t(`modelTests.types.${result.type}`)}</TableCell>
-                <TableCell>
-                  {t(`modelTests.statuses.${result.status}`)}
-                </TableCell>
-                <TableCell>{result.latencyMs} ms</TableCell>
-                <TableCell>
-                  <Button
-                    variant='link'
-                    className='max-w-80 justify-start truncate'
-                    onClick={() => setDetailId(result.id)}
-                  >
-                    {result.error || result.text || t('modelTests.detail')}
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-      {!history.data?.items.length && (
-        <p>
-          {t(history.isLoading ? 'modelTests.loading' : 'modelTests.empty')}
-        </p>
-      )}
-      <div className='flex items-center gap-3'>
-        <Button
-          variant='outline'
-          disabled={search.page <= 1}
-          onClick={() => update({ page: search.page - 1 })}
-        >
-          {t('modelTests.previous')}
-        </Button>
-        <span>
-          {search.page} /{' '}
-          {Math.max(1, Math.ceil((history.data?.total ?? 0) / 50))}
-        </span>
-        <Button
-          variant='outline'
-          disabled={search.page * 50 >= (history.data?.total ?? 0)}
-          onClick={() => update({ page: search.page + 1 })}
-        >
-          {t('modelTests.next')}
-        </Button>
-      </div>
+      <ManagementTable
+        name='testHistory'
+        data={history.data?.items ?? EMPTY_HISTORY}
+        columns={historyColumns}
+        loading={history.isLoading}
+        serverTotal={history.data?.total ?? 0}
+      />
       <Dialog
         open={detailId !== null}
         onOpenChange={(open) => {

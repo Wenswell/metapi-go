@@ -30,6 +30,11 @@ type ModelTestTarget struct {
 	Type      string `json:"type"`
 }
 type ModelTestPlan struct {
+	SystemPrompt      string `json:"systemPrompt"`
+	VideoSystemPrompt string `json:"videoSystemPrompt"`
+	CodexSystemPrompt string `json:"codexSystemPrompt"`
+	NewsSource        string `json:"newsSource"`
+
 	Targets         []ModelTestTarget `json:"targets"`
 	TextPrompts     []string          `json:"textPrompts"`
 	ImagePrompt     string            `json:"imagePrompt"`
@@ -46,7 +51,7 @@ type ModelTestPlan struct {
 }
 
 func DefaultModelTestPlan() ModelTestPlan {
-	return ModelTestPlan{Targets: []ModelTestTarget{}, TextPrompts: []string{"Reply with OK."}, ImagePrompt: "Describe this image.", VideoPrompt: "Summarize this video.", CodexPrompt: "Reply with OK.", SearchPrompt: "What is the latest stable Go release?", TimeoutSeconds: 120, MaxOutputTokens: 512, Cron: "0 9 * * *", Timezone: "Asia/Singapore"}
+	return ModelTestPlan{NewsSource: "rss", SystemPrompt: "You are a helpful assistant. Keep replies under 30 words.", Targets: []ModelTestTarget{}, TextPrompts: []string{"Reply with OK."}, ImagePrompt: "Describe this image.", VideoPrompt: "Summarize this video.", CodexPrompt: "Reply with OK.", SearchPrompt: "What is the latest stable Go release?", TimeoutSeconds: 120, MaxOutputTokens: 512, Cron: "0 9 * * *", Timezone: "Asia/Singapore"}
 }
 func LoadModelTestPlan(db *sqlx.DB) (ModelTestPlan, error) {
 	var value string
@@ -76,6 +81,16 @@ func (p ModelTestPlan) Validate() error {
 			return fmt.Errorf("each prompt must contain 1–16000 bytes")
 		}
 	}
+	for _, value := range []string{p.SystemPrompt, p.VideoSystemPrompt, p.CodexSystemPrompt} {
+		if len(value) > 16000 {
+			return fmt.Errorf("system prompt exceeds 16000 bytes")
+		}
+	}
+	if p.NewsSource != "" {
+		if _, ok := modelTestNewsSources[p.NewsSource]; !ok {
+			return fmt.Errorf("invalid news source")
+		}
+	}
 	seen := map[ModelTestTarget]bool{}
 	for _, target := range p.Targets {
 		if target.AccountID <= 0 || strings.TrimSpace(target.Model) == "" || len(target.Model) > 256 {
@@ -103,8 +118,8 @@ func (p ModelTestPlan) Validate() error {
 			if !ok || !strings.HasPrefix(header, "data:"+media.kind+"/") || !strings.HasSuffix(header, ";base64") {
 				return fmt.Errorf("invalid %s data URL", media.kind)
 			}
-			if _, err := base64.StdEncoding.DecodeString(data); err != nil {
-				return fmt.Errorf("invalid media base64")
+			if decoded, err := base64.StdEncoding.DecodeString(data); err != nil || len(decoded) > 6<<20 {
+				return fmt.Errorf("media must be valid base64 and at most 6 MiB")
 			}
 		} else {
 			parsed, err := url.Parse(media.value)
@@ -112,7 +127,7 @@ func (p ModelTestPlan) Validate() error {
 				return fmt.Errorf("media must be an HTTP URL or base64 data URL")
 			}
 		}
-		if len(media.value) > 8<<20 {
+		if len(media.value) > (8<<20)+256 {
 			return fmt.Errorf("media must be at most 8 MiB")
 		}
 	}
@@ -143,6 +158,17 @@ func SaveModelTestPlan(db *sqlx.DB, plan ModelTestPlan) error {
 			return fmt.Errorf("account %d does not exist", target.AccountID)
 		}
 	}
+	for _, target := range plan.Targets {
+		var count int
+		err := db.Get(&count, db.Rebind(`SELECT COUNT(*) FROM model_availability m JOIN accounts a ON a.id=m.account_id WHERE m.account_id=? AND m.model_name=? AND m.available=? AND NOT EXISTS(SELECT 1 FROM site_disabled_models d WHERE d.site_id=a.site_id AND d.model_name=m.model_name)`), target.AccountID, target.Model, true)
+		if err != nil {
+			return err
+		}
+		if count == 0 {
+			return fmt.Errorf("model %s is not available for account %d; refresh account models first", target.Model, target.AccountID)
+		}
+	}
+
 	data, err := json.Marshal(plan)
 	if err != nil {
 		return err
@@ -199,6 +225,11 @@ func RunModelTests(ctx context.Context, db *sqlx.DB, cfg *config.Config, plan Mo
 		return "", ErrModelTestsBusy
 	}
 	defer modelTestMutex.Unlock()
+	var err error
+	plan, err = resolveModelTestNews(ctx, plan)
+	if err != nil {
+		return "", err
+	}
 	batch := uuid.NewString()
 	for _, target := range plan.Targets {
 		if err := ctx.Err(); err != nil {
@@ -209,14 +240,17 @@ func RunModelTests(ctx context.Context, db *sqlx.DB, cfg *config.Config, plan Mo
 		switch target.Type {
 		case "text":
 			input.Prompts = plan.TextPrompts
+			input.SystemPrompt = plan.SystemPrompt
 		case "image":
 			input.Prompts = []string{plan.ImagePrompt}
 			input.Media = plan.ImageMedia
 		case "video":
 			input.Prompts = []string{plan.VideoPrompt}
 			input.Media = plan.VideoMedia
+			input.SystemPrompt = plan.VideoSystemPrompt
 		case "codex":
 			input.Prompts = []string{plan.CodexPrompt}
+			input.SystemPrompt = plan.CodexSystemPrompt
 		case "search":
 			input.Prompts = []string{plan.SearchPrompt}
 		}
@@ -311,8 +345,8 @@ func redactModelTestSecrets(text, token string, row *AccountWithSite) string {
 }
 
 type ModelTestHistoryFilter struct {
-	Query, Type, Status, SiteTag, From, To, BatchID string
-	Page, PageSize                                  int
+	Query, Type, Status, SiteTag, From, To, BatchID, Sort string
+	Page, PageSize                                        int
 }
 
 func ListModelTestHistory(db *sqlx.DB, filter ModelTestHistoryFilter) (map[string]any, error) {
@@ -357,8 +391,22 @@ func ListModelTestHistory(db *sqlx.DB, filter ModelTestHistoryFilter) (map[strin
 	if err := db.Get(&total, db.Rebind("SELECT COUNT(*) FROM model_test_results WHERE "+clause), args...); err != nil {
 		return nil, err
 	}
+	order := "created_at DESC,id DESC"
+	if filter.Sort != "" {
+		columns := map[string]string{"createdAt": "created_at", "account": "site_name", "model": "model", "type": "type", "status": "status", "latencyMs": "latency_ms"}
+		parts := []string{}
+		for _, field := range strings.Split(filter.Sort, ",") {
+			key, direction, _ := strings.Cut(field, ":")
+			column, ok := columns[key]
+			if !ok || direction != "asc" && direction != "desc" {
+				return nil, fmt.Errorf("invalid history sort")
+			}
+			parts = append(parts, column+" "+strings.ToUpper(direction))
+		}
+		order = strings.Join(parts, ",") + ",id DESC"
+	}
 	args = append(args, filter.PageSize, (filter.Page-1)*filter.PageSize)
 	rows := []ModelTestResult{}
-	err := db.Select(&rows, db.Rebind("SELECT id,batch_id,account_id,site_id,site_name,account_name,model,type,source,status,created_at,latency_ms,SUBSTR(text,1,300) AS text,error,'' AS detail FROM model_test_results WHERE "+clause+" ORDER BY created_at DESC,id DESC LIMIT ? OFFSET ?"), args...)
+	err := db.Select(&rows, db.Rebind("SELECT id,batch_id,account_id,site_id,site_name,account_name,model,type,source,status,created_at,latency_ms,SUBSTR(text,1,300) AS text,error,'' AS detail FROM model_test_results WHERE "+clause+" ORDER BY "+order+" LIMIT ? OFFSET ?"), args...)
 	return map[string]any{"items": rows, "total": total}, err
 }

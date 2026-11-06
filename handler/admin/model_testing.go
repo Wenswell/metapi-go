@@ -15,6 +15,14 @@ import (
 )
 
 func RegisterModelTestingRoutes(r chi.Router, db *sqlx.DB, cfg *config.Config) {
+	r.Get("/api/model-tests/news-preview", func(w http.ResponseWriter, r *http.Request) {
+		digest, err := service.LoadModelTestNews(r.Context(), r.URL.Query().Get("source"))
+		if err != nil {
+			writeError(w, 502, err.Error())
+			return
+		}
+		writeJSON(w, 200, map[string]string{"digest": digest})
+	})
 	r.Get("/api/model-tests/plan", func(w http.ResponseWriter, r *http.Request) {
 		plan, err := service.LoadModelTestPlan(db)
 		if err != nil {
@@ -57,8 +65,8 @@ func RegisterModelTestingRoutes(r chi.Router, db *sqlx.DB, cfg *config.Config) {
 		if page < 1 {
 			page = 1
 		}
-		size := 50
-		filter := service.ModelTestHistoryFilter{Query: q.Get("q"), Type: q.Get("type"), Status: q.Get("status"), SiteTag: q.Get("siteTag"), BatchID: q.Get("batchId"), Page: page, PageSize: size}
+		size := config.ClampInt(getQueryInt(r, "pageSize", 20), 1, 200)
+		filter := service.ModelTestHistoryFilter{Query: q.Get("q"), Type: q.Get("type"), Status: q.Get("status"), SiteTag: q.Get("siteTag"), BatchID: q.Get("batchId"), Page: page, PageSize: size, Sort: q.Get("sort")}
 		for _, item := range []struct {
 			key  string
 			dest *string

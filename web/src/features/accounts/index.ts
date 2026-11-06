@@ -18,3 +18,5 @@ export type { Account, AccountToken, AccountsSnapshot } from './types'
 
 // --- tokens sub-module ---
 export { useAllAccountTokens } from './tokens/api'
+
+export { accountModelsQueryOptions } from './models/api'

@@ -10,6 +10,7 @@ import {
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 
 import '@/i18n/config'
+vi.mock('@/hooks/use-media-query', () => ({ useMediaQuery: () => false }))
 
 import { ModelTestsPage } from '../model-tests-page'
 
@@ -31,6 +32,12 @@ const mock = vi.hoisted(() => ({
 }))
 vi.mock('@tanstack/react-router', () => ({
   useSearch: () => mock.search,
+  useLocation: (options?: {
+    select?: (location: { pathname: string; searchStr: string }) => unknown
+  }) => {
+    const location = { pathname: '/model-tests', searchStr: '' }
+    return options?.select ? options.select(location) : location
+  },
   useNavigate: () => mock.navigate,
 }))
 vi.mock('@/lib/api/transport', async (original) => ({
@@ -54,6 +61,10 @@ vi.mock('@/lib/api', () => ({
   },
 }))
 const plan = {
+  systemPrompt: '',
+  videoSystemPrompt: '',
+  codexSystemPrompt: '',
+  newsSource: 'rss',
   targets: [{ accountId: 8, model: 'old-model', type: 'text' }],
   textPrompts: ['first'],
   imagePrompt: 'image',
@@ -78,6 +89,13 @@ beforeEach(() => {
         return options?.method ? { success: true } : plan
       if (url.startsWith('/api/model-tests/history'))
         return { items: [], total: 0 }
+      if (url === '/api/accounts/7/models')
+        return {
+          models: [
+            { name: 'new-model', available: true },
+            { name: 'other-model', available: true },
+          ],
+        }
       throw new Error(`unexpected ${url}`)
     }
   )
@@ -99,13 +117,11 @@ it('filters candidate accounts by site tag, preserves saved targets, and saves e
   ).not.toBeInTheDocument()
   expect(screen.getByText('old-model')).toBeInTheDocument()
   fireEvent.click(checkbox)
-  fireEvent.change(screen.getByLabelText('Model'), {
-    target: { value: 'new-model' },
-  })
+  fireEvent.click(await screen.findByRole('checkbox', { name: 'new-model' }))
   fireEvent.click(
     screen.getByRole('button', { name: 'Add selected accounts (1)' })
   )
-  expect(screen.getByText('new-model')).toBeInTheDocument()
+  expect(screen.getAllByText('new-model')).toHaveLength(2)
   expect(screen.getByRole('button', { name: 'Run saved plan' })).toBeDisabled()
   fireEvent.click(screen.getByRole('button', { name: 'Save plan' }))
   await waitFor(() =>

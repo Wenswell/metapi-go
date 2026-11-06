@@ -10,6 +10,7 @@ import {
 import { afterEach, expect, it, vi } from 'vitest'
 
 import '@/i18n/config'
+vi.mock('@/hooks/use-media-query', () => ({ useMediaQuery: () => false }))
 
 import { AccountGroupsPage } from '../account-groups-page'
 const mock = vi.hoisted(() => ({ request: vi.fn(), getTask: vi.fn() }))
@@ -21,6 +22,12 @@ vi.mock('@tanstack/react-router', () => ({
     capability: 'all',
     sort: 'rate',
   }),
+  useLocation: (options?: {
+    select?: (location: { pathname: string; searchStr: string }) => unknown
+  }) => {
+    const location = { pathname: '/account-groups', searchStr: '' }
+    return options?.select ? options.select(location) : location
+  },
   useNavigate: () => vi.fn(),
 }))
 vi.mock('@/lib/api/transport', async (original) => ({

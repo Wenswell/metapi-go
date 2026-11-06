@@ -73,7 +73,9 @@ func contentSecurityPolicy(nonce string) string {
 	return "default-src 'self'; " +
 		"script-src 'self'; " +
 		"style-src 'self' 'nonce-" + nonce + "' " + sonnerToastStyleHash + "; " +
-		"img-src 'self' https://api.dicebear.com; " +
+		// Management test media previews are selected by the user; script/connect policies stay unchanged.
+		"img-src 'self' http: https: data:; " +
+		"media-src 'self' http: https: data:; " +
 		"connect-src 'self'; " +
 		"frame-src 'self' https://check.linux.do; " +
 		"frame-ancestors 'none'; " +

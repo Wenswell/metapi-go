@@ -8,6 +8,7 @@ import { resultSchema } from './api'
 
 const detailSchema = z.object({
   input: z.object({
+    systemPrompt: z.string().optional(),
     prompts: z.array(z.string()),
     media: z.string(),
     maxOutputTokens: z.number(),
@@ -60,6 +61,14 @@ export function TestResultDetail({ id }: { id: string }) {
         <p role='alert' className='text-destructive whitespace-pre-wrap'>
           {row.error}
         </p>
+      )}
+      {row.parsedDetail.input.systemPrompt && (
+        <section className='rounded-md border p-3'>
+          <h3 className='font-medium'>{t('modelTests.systemPrompt')}</h3>
+          <p className='text-sm whitespace-pre-wrap'>
+            {row.parsedDetail.input.systemPrompt}
+          </p>
+        </section>
       )}
       {row.parsedDetail.input.media && (
         <p className='text-muted-foreground text-sm break-all'>

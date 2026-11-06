@@ -103,28 +103,25 @@ function normalizeModels(raw: unknown): AccountModelEntry[] {
 // useAccountModels — GET /api/accounts/{id}/models
 // ---------------------------------------------------------------------------
 
-export function useAccountModels(
-  accountId?: number,
-  options?: Omit<UseQueryOptions<AccountModelsResponse>, 'queryKey' | 'queryFn'>
-) {
-  return useQuery({
+export function accountModelsQueryOptions(accountId?: number) {
+  return {
     queryKey: accountModelQueryKeys.list(accountId),
     queryFn: async () => {
       const result = await request<AccountModelsResponse>(
         `/api/accounts/${accountId}/models`
       )
-      return {
-        siteId: result?.siteId,
-        siteName: result?.siteName,
-        totalCount: result?.totalCount,
-        disabledCount: result?.disabledCount,
-        models: normalizeModels(result?.models),
-      }
+      return { ...result, models: normalizeModels(result.models) }
     },
     enabled: accountId !== undefined && accountId > 0,
     staleTime: 10 * 1000,
-    ...options,
-  })
+  }
+}
+
+export function useAccountModels(
+  accountId?: number,
+  options?: Omit<UseQueryOptions<AccountModelsResponse>, 'queryKey' | 'queryFn'>
+) {
+  return useQuery({ ...accountModelsQueryOptions(accountId), ...options })
 }
 
 // ---------------------------------------------------------------------------

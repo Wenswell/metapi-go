@@ -62,12 +62,26 @@ func TestModelTestingPersistence(t *testing.T) {
 			if err := db.Get(&missing, db.Rebind(`INSERT INTO accounts(site_id,username,access_token,status,created_at,updated_at) VALUES (?,?,?,?,'2026-11-06T00:00:00Z','2026-11-06T00:00:00Z') RETURNING id`), site, "no-api", "synthetic-session", "active"); err != nil {
 				t.Fatal(err)
 			}
+			for _, id := range []int64{account, missing} {
+				if _, err := db.Exec(db.Rebind(`INSERT INTO model_availability(account_id,model_name,available,checked_at) VALUES (?,?,?,'2026-11-06T00:00:00Z')`), id, "test-model", true); err != nil {
+					t.Fatal(err)
+				}
+			}
 			plan := DefaultModelTestPlan()
 			plan.TextPrompts = []string{"first", "second", "third"}
 			plan.Targets = []ModelTestTarget{{account, "test-model", "text"}, {missing, "test-model", "text"}}
 			if err := SaveModelTestPlan(db.DB, plan); err != nil {
 				t.Fatal(err)
 			}
+			invalid := plan
+			invalid.Targets = []ModelTestTarget{{account, "unfetched-model", "text"}}
+			if err := SaveModelTestPlan(db.DB, invalid); err == nil {
+				t.Fatal("accepted unfetched model")
+			}
+			if _, err := ListModelTestHistory(db.DB, ModelTestHistoryFilter{Page: 1, PageSize: 20, Sort: "model;DROP:asc"}); err == nil {
+				t.Fatal("accepted invalid sort")
+			}
+
 			loaded, err := LoadModelTestPlan(db.DB)
 			if err != nil || len(loaded.Targets) != 2 {
 				t.Fatalf("loaded=%+v err=%v", loaded, err)
@@ -103,7 +117,7 @@ func TestModelTestingPersistence(t *testing.T) {
 			if calls != 2 {
 				t.Fatalf("missing credential sent upstream, calls=%d", calls)
 			}
-			history, err = ListModelTestHistory(db.DB, ModelTestHistoryFilter{SiteTag: "付费", Page: 1, PageSize: 50})
+			history, err = ListModelTestHistory(db.DB, ModelTestHistoryFilter{SiteTag: "付费", Sort: "model:desc", Page: 1, PageSize: 50})
 			if err != nil || history["total"] != 0 {
 				t.Fatalf("tag filtering: %+v %v", history, err)
 			}

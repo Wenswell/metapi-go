@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link } from '@tanstack/react-router'
 /* eslint-disable react/only-export-components */
 // metapi-go/features/sites — TanStack Table column definitions.
 //
@@ -7,7 +7,7 @@ import { Link } from "@tanstack/react-router";
 // drive the mobile-card layout (`mobileTitle` / `mobileBadge` / `mobileOrder`
 // / `mobileHidden`) so the same definition serves the desktop table and the
 // phone card list without a parallel layout file.
-import type { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef } from '@tanstack/react-table'
 import {
   Eye as EyeIcon,
   MoreHorizontal as MoreHorizontalIcon,
@@ -16,63 +16,63 @@ import {
   PinOff as PinOffIcon,
   Power as PowerIcon,
   Trash2 as Trash2Icon,
-} from "lucide-react";
-import { useTranslation } from "react-i18next";
+} from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
-import { PlatformBadge } from "@/components/common/platform-badge";
-import { SafeExternalLink } from "@/components/common/safe-external-link";
-import { DataTableColumnHeader } from "@/components/data-table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { PlatformBadge } from '@/components/common/platform-badge'
+import { SafeExternalLink } from '@/components/common/safe-external-link'
+import { DataTableColumnHeader } from '@/components/data-table'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Spinner } from "@/components/ui/spinner";
-import { toBcp47 } from "@/i18n/languages";
+} from '@/components/ui/dropdown-menu'
+import { Spinner } from '@/components/ui/spinner'
+import { toBcp47 } from '@/i18n/languages'
 import {
   formatAbsoluteDateTime,
   formatCurrency,
   formatRelativeTime,
-} from "@/lib/format";
-import { cn } from "@/lib/utils";
+} from '@/lib/format'
+import { cn } from '@/lib/utils'
 
-import { resolveSiteBalanceUsd } from "../lib/site-balance";
-import type { Site, SiteStatus } from "../types";
+import { resolveSiteBalanceUsd } from '../lib/site-balance'
+import type { Site, SiteStatus } from '../types'
 
 export type SitesColumnActions = {
-  onEdit: (site: Site) => void;
-  onView: (site: Site) => void;
-  onToggleStatus: (site: Site) => void;
-  onTogglePin: (site: Site) => void;
-  onDelete: (site: Site) => void;
-};
+  onEdit: (site: Site) => void
+  onView: (site: Site) => void
+  onToggleStatus: (site: Site) => void
+  onTogglePin: (site: Site) => void
+  onDelete: (site: Site) => void
+}
 
 const STATUS_LABEL_KEY: Record<SiteStatus, string> = {
-  active: "sites.status.active",
-  disabled: "sites.status.disabled",
-};
+  active: 'sites.status.active',
+  disabled: 'sites.status.disabled',
+}
 
 function StatusBadge({ status }: { status: SiteStatus | undefined }) {
-  const { t } = useTranslation();
-  const resolved: SiteStatus = status === "disabled" ? "disabled" : "active";
+  const { t } = useTranslation()
+  const resolved: SiteStatus = status === 'disabled' ? 'disabled' : 'active'
   return (
-    <Badge variant={resolved === "active" ? "success" : "secondary"}>
+    <Badge variant={resolved === 'active' ? 'success' : 'secondary'}>
       {t(STATUS_LABEL_KEY[resolved])}
     </Badge>
-  );
+  )
 }
 
 function TruncatedUrl({ url }: { url: string }) {
   return (
-    <SafeExternalLink url={url} className="max-w-72 text-sm" title={url}>
+    <SafeExternalLink url={url} className='max-w-72 text-sm' title={url}>
       {url}
     </SafeExternalLink>
-  );
+  )
 }
 
 /**
@@ -84,15 +84,15 @@ function TruncatedUrl({ url }: { url: string }) {
  */
 export function useSitesColumns(
   actions: SitesColumnActions,
-  pendingSiteId: number | null = null,
+  pendingSiteId: number | null = null
 ): ColumnDef<Site>[] {
-  const { t, i18n } = useTranslation();
+  const { t, i18n } = useTranslation()
 
   const columns: ColumnDef<Site>[] = [
     {
-      id: "siteTag",
-      header: t("siteTags.label"),
-      accessorFn: (row) => (row.tags ?? []).join(", "),
+      id: 'siteTag',
+      header: t('siteTags.label'),
+      accessorFn: (row) => (row.tags ?? []).join(', '),
       filterFn: (row, _id, values: string[]) =>
         !values.length ||
         values.some((tag) => (row.original.tags ?? []).includes(tag)),
@@ -100,7 +100,7 @@ export function useSitesColumns(
       enableGlobalFilter: true,
     },
     {
-      id: "select",
+      id: 'select',
       enableSorting: false,
       enableHiding: false,
       enableResizing: false,
@@ -113,7 +113,7 @@ export function useSitesColumns(
             table.getIsSomeRowsSelected() && !table.getIsAllRowsSelected()
           }
           onCheckedChange={(value) => table.toggleAllRowsSelected(!!value)}
-          aria-label={t("sites.columns.selectAll")}
+          aria-label={t('sites.columns.selectAll')}
         />
       ),
       cell: ({ row }) => (
@@ -121,273 +121,273 @@ export function useSitesColumns(
           checked={row.getIsSelected()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
           onClick={(event) => event.stopPropagation()}
-          aria-label={t("sites.columns.selectRow")}
+          aria-label={t('sites.columns.selectRow')}
         />
       ),
     },
     {
-      id: "name",
-      accessorKey: "name",
+      id: 'name',
+      accessorKey: 'name',
       size: 200,
       meta: {
-        label: t("sites.columns.name"),
+        label: t('sites.columns.name'),
         mobileTitle: true,
         mobileOrder: 0,
       },
       header: ({ column }) => (
         <DataTableColumnHeader
           column={column}
-          title={t("sites.columns.name")}
+          title={t('sites.columns.name')}
         />
       ),
       cell: ({ row }) => {
-        const site = row.original;
+        const site = row.original
         return (
-          <div className="flex min-w-0 items-center gap-2">
+          <div className='flex min-w-0 items-center gap-2'>
             {site.isPinned && (
-              <PinIcon className="text-muted-foreground size-3.5 shrink-0" />
+              <PinIcon className='text-muted-foreground size-3.5 shrink-0' />
             )}
             <button
-              type="button"
-              className="max-w-55 truncate text-left font-medium hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring max-[640px]:max-w-full max-[640px]:whitespace-normal"
+              type='button'
+              className='focus-visible:ring-ring max-w-55 truncate text-left font-medium hover:underline focus-visible:ring-2 focus-visible:outline-none max-[640px]:max-w-full max-[640px]:whitespace-normal'
               title={site.name}
               onClick={(event) => {
-                event.stopPropagation();
-                actions.onView(site);
+                event.stopPropagation()
+                actions.onView(site)
               }}
             >
               {site.name}
             </button>
           </div>
-        );
+        )
       },
     },
     {
-      id: "url",
-      accessorKey: "url",
+      id: 'url',
+      accessorKey: 'url',
       size: 280,
       meta: {
-        label: t("sites.columns.url"),
+        label: t('sites.columns.url'),
         mobileFullWidth: true,
         mobileOrder: 10,
       },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t("sites.columns.url")} />
+        <DataTableColumnHeader column={column} title={t('sites.columns.url')} />
       ),
       cell: ({ row }) => <TruncatedUrl url={row.original.url} />,
     },
     {
-      id: "status",
-      accessorKey: "status",
+      id: 'status',
+      accessorKey: 'status',
       size: 120,
       meta: {
-        label: t("sites.columns.status"),
+        label: t('sites.columns.status'),
         mobileBadge: true,
         mobileOrder: 1,
       },
       header: ({ column }) => (
         <DataTableColumnHeader
           column={column}
-          title={t("sites.columns.status")}
+          title={t('sites.columns.status')}
         />
       ),
       cell: ({ row }) => <StatusBadge status={row.original.status} />,
       filterFn: (row, columnId, filterValue) => {
-        const value = row.getValue(columnId) as SiteStatus | undefined;
+        const value = row.getValue(columnId) as SiteStatus | undefined
         const resolved: SiteStatus =
-          value === "disabled" ? "disabled" : "active";
+          value === 'disabled' ? 'disabled' : 'active'
         if (Array.isArray(filterValue)) {
-          return filterValue.length === 0 || filterValue.includes(resolved);
+          return filterValue.length === 0 || filterValue.includes(resolved)
         }
-        return String(filterValue) === resolved;
+        return String(filterValue) === resolved
       },
     },
     {
-      id: "platform",
-      accessorKey: "platform",
+      id: 'platform',
+      accessorKey: 'platform',
       size: 140,
       meta: {
-        label: t("sites.columns.platform"),
+        label: t('sites.columns.platform'),
         mobileOrder: 20,
       },
       header: ({ column }) => (
         <DataTableColumnHeader
           column={column}
-          title={t("sites.columns.platform")}
+          title={t('sites.columns.platform')}
         />
       ),
       cell: ({ row }) => {
-        const platform = row.original.platform;
-        return <PlatformBadge platform={platform} />;
+        const platform = row.original.platform
+        return <PlatformBadge platform={platform} />
       },
     },
     {
-      id: "accountCount",
-      accessorKey: "accountCount",
+      id: 'accountCount',
+      accessorKey: 'accountCount',
       size: 120,
-      meta: { label: t("sites.columns.accountCount"), mobileOrder: 30 },
+      meta: { label: t('sites.columns.accountCount'), mobileOrder: 30 },
       header: ({ column }) => (
         <DataTableColumnHeader
           column={column}
-          title={t("sites.columns.accountCount")}
+          title={t('sites.columns.accountCount')}
         />
       ),
       cell: ({ row }) => {
-        const count = row.original.accountCount;
+        const count = row.original.accountCount
         const activeFromSubscription =
-          row.original.subscriptionSummary?.activeCount;
-        let resolved: number | null = null;
-        if (typeof count === "number") {
-          resolved = count;
-        } else if (typeof activeFromSubscription === "number") {
-          resolved = activeFromSubscription;
+          row.original.subscriptionSummary?.activeCount
+        let resolved: number | null = null
+        if (typeof count === 'number') {
+          resolved = count
+        } else if (typeof activeFromSubscription === 'number') {
+          resolved = activeFromSubscription
         }
         return resolved === null ? (
           <span>—</span>
         ) : (
           <Link
-            to="/accounts"
+            to='/accounts'
             search={{ site: row.original.id }}
-            className="text-primary hover:bg-accent inline-flex items-center rounded-md border px-2 py-1 text-xs tabular-nums"
-            aria-label={t("sites.page.viewAccounts", {
+            className='text-primary hover:bg-accent inline-flex items-center rounded-md border px-2 py-1 text-xs tabular-nums'
+            aria-label={t('sites.page.viewAccounts', {
               name: row.original.name,
               count: resolved,
             })}
           >
             {resolved}
           </Link>
-        );
+        )
       },
     },
     {
-      id: "balance",
+      id: 'balance',
       accessorFn: (row) => resolveSiteBalanceUsd(row),
       size: 140,
       meta: {
-        label: t("sites.columns.balance"),
+        label: t('sites.columns.balance'),
         mobileOrder: 35,
       },
       header: ({ column }) => (
         <DataTableColumnHeader
           column={column}
-          title={t("sites.columns.balance")}
+          title={t('sites.columns.balance')}
         />
       ),
       cell: ({ row }) => (
-        <span className="text-sm tabular-nums">
+        <span className='text-sm tabular-nums'>
           {formatCurrency(resolveSiteBalanceUsd(row.original))}
         </span>
       ),
     },
     {
-      id: "globalWeight",
-      accessorKey: "globalWeight",
+      id: 'globalWeight',
+      accessorKey: 'globalWeight',
       size: 120,
       meta: {
-        label: t("sites.columns.globalWeight"),
+        label: t('sites.columns.globalWeight'),
         mobileHideWhen: (site) => (site.globalWeight ?? 1) === 1,
         mobileOrder: 40,
       },
       header: ({ column }) => (
-        <span title={t("sites.page.weightFormula")}>
+        <span title={t('sites.page.weightFormula')}>
           <DataTableColumnHeader
             column={column}
-            title={t("sites.columns.globalWeight")}
+            title={t('sites.columns.globalWeight')}
           />
         </span>
       ),
       cell: ({ row }) => (
-        <span className="text-muted-foreground text-sm tabular-nums">
+        <span className='text-muted-foreground text-sm tabular-nums'>
           {row.original.globalWeight ?? 1}
         </span>
       ),
     },
     {
-      id: "useSystemProxy",
-      accessorKey: "useSystemProxy",
+      id: 'useSystemProxy',
+      accessorKey: 'useSystemProxy',
       size: 130,
       meta: {
-        label: t("sites.columns.useSystemProxy"),
+        label: t('sites.columns.useSystemProxy'),
         mobileHidden: true,
         mobileOrder: 45,
       },
       header: ({ column }) => (
         <DataTableColumnHeader
           column={column}
-          title={t("sites.columns.useSystemProxy")}
+          title={t('sites.columns.useSystemProxy')}
         />
       ),
       cell: ({ row }) => {
-        const enabled = row.original.useSystemProxy;
+        const enabled = row.original.useSystemProxy
         return (
-          <Badge variant={enabled ? "success" : "secondary"}>
-            {enabled ? t("sites.detail.yes") : t("sites.detail.no")}
+          <Badge variant={enabled ? 'success' : 'secondary'}>
+            {enabled ? t('sites.detail.yes') : t('sites.detail.no')}
           </Badge>
-        );
+        )
       },
     },
     {
-      id: "externalCheckinUrl",
-      accessorKey: "externalCheckinUrl",
+      id: 'externalCheckinUrl',
+      accessorKey: 'externalCheckinUrl',
       size: 240,
       meta: {
-        label: t("sites.columns.externalCheckinUrl"),
+        label: t('sites.columns.externalCheckinUrl'),
         mobileHidden: true,
         mobileOrder: 46,
       },
       header: ({ column }) => (
         <DataTableColumnHeader
           column={column}
-          title={t("sites.columns.externalCheckinUrl")}
+          title={t('sites.columns.externalCheckinUrl')}
         />
       ),
       cell: ({ row }) => {
-        const url = row.original.externalCheckinUrl;
+        const url = row.original.externalCheckinUrl
         if (!url) {
-          return <span className="text-muted-foreground text-sm">—</span>;
+          return <span className='text-muted-foreground text-sm'>—</span>
         }
         return (
-          <span className="block max-w-56 truncate text-sm" title={url}>
+          <span className='block max-w-56 truncate text-sm' title={url}>
             {url}
           </span>
-        );
+        )
       },
     },
     {
-      id: "createdAt",
-      accessorKey: "createdAt",
+      id: 'createdAt',
+      accessorKey: 'createdAt',
       size: 170,
       meta: {
-        label: t("sites.columns.createdAt"),
+        label: t('sites.columns.createdAt'),
         mobileHidden: true,
         mobileOrder: 47,
       },
       header: ({ column }) => (
         <DataTableColumnHeader
           column={column}
-          title={t("sites.columns.createdAt")}
+          title={t('sites.columns.createdAt')}
         />
       ),
       cell: ({ row }) => {
-        const createdAt = row.original.createdAt;
+        const createdAt = row.original.createdAt
         if (!createdAt) {
-          return <span className="text-muted-foreground text-sm">—</span>;
+          return <span className='text-muted-foreground text-sm'>—</span>
         }
         return (
           <span
-            className="text-muted-foreground text-sm whitespace-nowrap"
+            className='text-muted-foreground text-sm whitespace-nowrap'
             title={formatAbsoluteDateTime(
               createdAt,
-              toBcp47(i18n.language || "en"),
+              toBcp47(i18n.language || 'en')
             )}
           >
-            {formatRelativeTime(createdAt, toBcp47(i18n.language || "en"))}
+            {formatRelativeTime(createdAt, toBcp47(i18n.language || 'en'))}
           </span>
-        );
+        )
       },
     },
     {
-      id: "actions",
+      id: 'actions',
       size: 56,
       enableSorting: false,
       enableHiding: false,
@@ -398,63 +398,63 @@ export function useSitesColumns(
         mobileActionsInHeader: true,
       },
       header: () => (
-        <span className="text-muted-foreground text-xs">
-          {t("sites.columns.actions")}
+        <span className='text-muted-foreground text-xs'>
+          {t('sites.columns.actions')}
         </span>
       ),
       cell: ({ row }) => {
-        const site = row.original;
-        const isActive = site.status !== "disabled";
+        const site = row.original
+        const isActive = site.status !== 'disabled'
         const isThisRowPending =
-          pendingSiteId !== null && pendingSiteId === site.id;
+          pendingSiteId !== null && pendingSiteId === site.id
 
         let pinToggleIcon = (
-          <PinIcon className="text-muted-foreground/70 size-3.5" />
-        );
+          <PinIcon className='text-muted-foreground/70 size-3.5' />
+        )
         if (isThisRowPending) {
-          pinToggleIcon = <Spinner className="size-3.5" />;
+          pinToggleIcon = <Spinner className='size-3.5' />
         } else if (site.isPinned) {
           pinToggleIcon = (
-            <PinOffIcon className="text-muted-foreground/70 size-3.5" />
-          );
+            <PinOffIcon className='text-muted-foreground/70 size-3.5' />
+          )
         }
 
         return (
-          <div className={cn("flex justify-end")}>
+          <div className={cn('flex justify-end')}>
             <DropdownMenu>
               <DropdownMenuTrigger
                 render={
                   <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    className="data-popup-open:bg-accent"
-                    aria-label={t("sites.columns.rowActions")}
+                    variant='ghost'
+                    size='icon-sm'
+                    className='data-popup-open:bg-accent'
+                    aria-label={t('sites.columns.rowActions')}
                   />
                 }
               >
-                <MoreHorizontalIcon className="size-4" />
+                <MoreHorizontalIcon className='size-4' />
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuContent align='end' className='w-44'>
                 <DropdownMenuItem onClick={() => actions.onView(site)}>
-                  <EyeIcon className="text-muted-foreground/70 size-3.5" />
-                  {t("sites.actions.viewDetails")}
+                  <EyeIcon className='text-muted-foreground/70 size-3.5' />
+                  {t('sites.actions.viewDetails')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => actions.onEdit(site)}>
-                  <PencilIcon className="text-muted-foreground/70 size-3.5" />
-                  {t("sites.actions.edit")}
+                  <PencilIcon className='text-muted-foreground/70 size-3.5' />
+                  {t('sites.actions.edit')}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   disabled={isThisRowPending}
                   onClick={() => actions.onToggleStatus(site)}
                 >
                   {isThisRowPending ? (
-                    <Spinner className="size-3.5" />
+                    <Spinner className='size-3.5' />
                   ) : (
-                    <PowerIcon className="text-muted-foreground/70 size-3.5" />
+                    <PowerIcon className='text-muted-foreground/70 size-3.5' />
                   )}
                   {isActive
-                    ? t("sites.actions.disable")
-                    : t("sites.actions.enable")}
+                    ? t('sites.actions.disable')
+                    : t('sites.actions.enable')}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   disabled={isThisRowPending}
@@ -462,29 +462,29 @@ export function useSitesColumns(
                 >
                   {pinToggleIcon}
                   {site.isPinned
-                    ? t("sites.actions.unpin")
-                    : t("sites.actions.pin")}
+                    ? t('sites.actions.unpin')
+                    : t('sites.actions.pin')}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  variant="destructive"
+                  variant='destructive'
                   onClick={() => actions.onDelete(site)}
                 >
-                  <Trash2Icon className="size-3.5" />
-                  {t("sites.actions.delete")}
+                  <Trash2Icon className='size-3.5' />
+                  {t('sites.actions.delete')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        );
+        )
       },
     },
-  ];
+  ]
 
-  return columns;
+  return columns
 }
 
 export const SITES_STATUS_FILTER_OPTIONS = [
-  { label: "sites.status.active", value: "active" },
-  { label: "sites.status.disabled", value: "disabled" },
-];
+  { label: 'sites.status.active', value: 'active' },
+  { label: 'sites.status.disabled', value: 'disabled' },
+]
