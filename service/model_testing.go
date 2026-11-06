@@ -73,8 +73,8 @@ func (p ModelTestPlan) Validate() error {
 	if p.TimeoutSeconds < 1 || p.TimeoutSeconds > 600 || p.MaxOutputTokens < 1 || p.MaxOutputTokens > 32768 {
 		return fmt.Errorf("timeout must be 1–600 seconds and output limit 1–32768 tokens")
 	}
-	if len(p.TextPrompts) < 1 || len(p.TextPrompts) > 3 {
-		return fmt.Errorf("text tests require 1–3 prompts")
+	if len(p.TextPrompts) < 1 {
+		return fmt.Errorf("text tests require at least one prompt")
 	}
 	for _, prompt := range append(append([]string{}, p.TextPrompts...), p.ImagePrompt, p.VideoPrompt, p.CodexPrompt, p.SearchPrompt) {
 		if strings.TrimSpace(prompt) == "" || len(prompt) > 16000 {

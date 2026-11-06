@@ -43,6 +43,9 @@ func TestExecuteModelTests(t *testing.T) {
 					if len(messages) != calls*2 || messages[0].(map[string]any)["content"] != "synthetic-system" {
 						t.Errorf("lost conversation: %v", messages)
 					}
+					if calls == 1 && messages[len(messages)-1].(map[string]any)["content"] != "first\n\nsecond\nthird\nfourth" {
+						t.Error("multiline prompt changed")
+					}
 					fmt.Fprint(w, `{"choices":[{"message":{"content":"text ok"}}],"usage":{"prompt_tokens":3,"completion_tokens":4}}`)
 				case "image":
 					parts := body["messages"].([]any)[0].(map[string]any)["content"].([]any)
@@ -68,7 +71,7 @@ func TestExecuteModelTests(t *testing.T) {
 			defer server.Close()
 			input := ModelTestInput{Type: kind, Model: "test-model", Prompts: []string{"first"}, MaxOutputTokens: 16, SystemPrompt: "synthetic-system"}
 			if kind == "text" {
-				input.Prompts = append(input.Prompts, "second", "third")
+				input.Prompts = []string{"first\n\nsecond\nthird\nfourth", "second", "third", "fourth", "fifth"}
 			}
 			if kind == "image" {
 				input.Media = "data:image/png;base64,aGk="

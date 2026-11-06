@@ -162,3 +162,50 @@ it('shows load errors without presenting an editable empty plan', async () => {
   ).not.toBeInTheDocument()
   client.clear()
 })
+
+it('preserves multiline prompts, saves more than three rounds, and removes a middle round', async () => {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  })
+  render(
+    <QueryClientProvider client={client}>
+      <ModelTestsPage />
+    </QueryClientProvider>
+  )
+  const multiline = 'First line\n\nSecond line\nThird line\nFourth line'
+  fireEvent.change(await screen.findByRole('textbox', { name: 'Round 1' }), {
+    target: { value: multiline },
+  })
+  for (let index = 2; index <= 5; index++) {
+    fireEvent.click(screen.getByRole('button', { name: 'Add round' }))
+    fireEvent.change(
+      await screen.findByRole('textbox', { name: `Round ${index}` }),
+      { target: { value: `prompt ${index}` } }
+    )
+  }
+  fireEvent.click(screen.getByRole('button', { name: 'Remove round 2' }))
+  expect(screen.getByRole('textbox', { name: 'Round 2' })).toHaveValue(
+    'prompt 3'
+  )
+  expect(screen.getByRole('textbox', { name: 'Round 4' })).toHaveValue(
+    'prompt 5'
+  )
+  fireEvent.click(screen.getByRole('button', { name: 'Save plan' }))
+  await waitFor(() =>
+    expect(mock.request).toHaveBeenCalledWith(
+      '/api/model-tests/plan',
+      expect.objectContaining({ method: 'PUT' })
+    )
+  )
+  const saved = mock.request.mock.calls.find(
+    ([url, options]) =>
+      url === '/api/model-tests/plan' && options?.method === 'PUT'
+  )
+  expect(JSON.parse(saved?.[1].body).textPrompts).toEqual([
+    multiline,
+    'prompt 3',
+    'prompt 4',
+    'prompt 5',
+  ])
+  client.clear()
+})

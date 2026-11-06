@@ -18,7 +18,14 @@ export const planSchema = z.object({
       })
     )
     .max(200),
-  textPrompts: z.array(z.string().min(1)).min(1).max(3),
+  textPrompts: z
+    .array(
+      z
+        .string()
+        .min(1)
+        .refine((value) => value.trim().length > 0)
+    )
+    .min(1),
   imagePrompt: z.string().min(1),
   videoPrompt: z.string().min(1),
   codexPrompt: z.string().min(1),

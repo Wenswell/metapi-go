@@ -160,3 +160,17 @@ func TestModelTestingScheduleAndValidation(t *testing.T) {
 		t.Fatal("invalid timezone accepted")
 	}
 }
+
+func TestModelTestPlanTextRounds(t *testing.T) {
+	plan := DefaultModelTestPlan()
+	plan.TextPrompts = []string{"first\n\nsecond\nthird\nfourth", "second round", "third round", "fourth round", "fifth round"}
+	if err := plan.Validate(); err != nil {
+		t.Fatalf("multiline and five rounds rejected: %v", err)
+	}
+	for _, prompts := range [][]string{nil, {" "}, {"valid", "\n\n"}} {
+		plan.TextPrompts = prompts
+		if err := plan.Validate(); err == nil {
+			t.Fatal("accepted missing or blank prompt")
+		}
+	}
+}

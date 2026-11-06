@@ -110,6 +110,8 @@ function ModelTestsEditor({ initialPlan }: { initialPlan: TestPlan }) {
     resolver: zodResolver(editorSchema),
     defaultValues: { ...initialPlan, draftModels: [], draftType: 'text' },
   })
+  const textPrompts = useWatch({ control: form.control, name: 'textPrompts' })
+
   const targets =
     useWatch({ control: form.control, name: 'targets' }) ?? EMPTY_TARGETS
   const [selected, setSelected] = useState<number[]>([])
@@ -596,25 +598,65 @@ function ModelTestsEditor({ initialPlan }: { initialPlan: TestPlan }) {
               </pre>
             )}
             <div className='grid gap-4 md:grid-cols-2'>
-              <FormField
-                control={form.control}
-                name='textPrompts'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('modelTests.fields.textPrompts')}</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        {...field}
-                        value={field.value.join('\n')}
-                        onChange={(event) =>
-                          field.onChange(event.target.value.split('\n'))
-                        }
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className='space-y-3 md:col-span-2'>
+                <p className='text-sm font-medium'>
+                  {t('modelTests.fields.textPrompts')}
+                </p>
+                <p className='text-muted-foreground text-sm'>
+                  {t('modelTests.textPromptsHint')}
+                </p>
+                {textPrompts.map((_, index) => (
+                  <FormField
+                    key={index}
+                    control={form.control}
+                    name={`textPrompts.${index}`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className='flex items-center justify-between gap-2'>
+                          <FormLabel>
+                            {t('modelTests.textRound', { count: index + 1 })}
+                          </FormLabel>
+                          <Button
+                            type='button'
+                            variant='ghost'
+                            size='sm'
+                            disabled={textPrompts.length === 1}
+                            aria-label={t('modelTests.removeTextRound', {
+                              count: index + 1,
+                            })}
+                            onClick={() =>
+                              form.setValue(
+                                'textPrompts',
+                                textPrompts.filter(
+                                  (_, current) => current !== index
+                                ),
+                                { shouldDirty: true, shouldValidate: true }
+                              )
+                            }
+                          >
+                            {t('modelTests.remove')}
+                          </Button>
+                        </div>
+                        <FormControl>
+                          <Textarea {...field} rows={4} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                ))}
+                <Button
+                  type='button'
+                  variant='outline'
+                  onClick={() =>
+                    form.setValue('textPrompts', [...textPrompts, ''], {
+                      shouldDirty: true,
+                    })
+                  }
+                >
+                  {t('modelTests.addTextRound')}
+                </Button>
+              </div>
               {(
                 [
                   'systemPrompt',
