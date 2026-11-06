@@ -370,7 +370,7 @@ func resolveLinkTarget(root, linkingFileRel, target string) string {
 const changelogBulletBudget = 170
 
 var (
-	changelogVersionRE = regexp.MustCompile(`^## \[(?:Unreleased|v\d+\.\d+\.\d+)\]`)
+	changelogVersionRE = regexp.MustCompile(`^## \[(?:Unreleased|v\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)\]`)
 	changelogSectionRE = regexp.MustCompile(`^### (.+)$`)
 	// The forensic-mechanism arrow: "the code did X ⇒ therefore the user saw
 	// Y" is the shape every over-long entry grew from. The reader needs the
@@ -519,7 +519,7 @@ func TestChangelogContractGateIsNotAVacuousPass(t *testing.T) {
 		"- 正常条目",
 		"### 修复",
 		"- 重复节下的条目",
-		"## [v1.2.3]",
+		"## [v1.2.3-local.1]",
 		"### 变更",
 		"- 正常条目",
 	}

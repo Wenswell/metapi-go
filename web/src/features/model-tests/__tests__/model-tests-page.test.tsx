@@ -9,7 +9,7 @@ import {
 } from '@testing-library/react'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 
-import '@/i18n/config'
+import i18n from '@/i18n/config'
 vi.mock('@/hooks/use-media-query', () => ({ useMediaQuery: () => false }))
 
 import { ModelTestsPage } from '../model-tests-page'
@@ -173,9 +173,14 @@ it('preserves multiline prompts, saves more than three rounds, and removes a mid
     </QueryClientProvider>
   )
   const multiline = 'First line\n\nSecond line\nThird line\nFourth line'
-  fireEvent.change(await screen.findByRole('textbox', { name: 'Round 1' }), {
-    target: { value: multiline },
-  })
+  fireEvent.change(
+    await screen.findByRole('textbox', {
+      name: i18n.t('modelTests.textRound', { count: 1 }),
+    }),
+    {
+      target: { value: multiline },
+    }
+  )
   for (let index = 2; index <= 5; index++) {
     fireEvent.click(screen.getByRole('button', { name: 'Add round' }))
     fireEvent.change(
@@ -184,12 +189,16 @@ it('preserves multiline prompts, saves more than three rounds, and removes a mid
     )
   }
   fireEvent.click(screen.getByRole('button', { name: 'Remove round 2' }))
-  expect(screen.getByRole('textbox', { name: 'Round 2' })).toHaveValue(
-    'prompt 3'
-  )
-  expect(screen.getByRole('textbox', { name: 'Round 4' })).toHaveValue(
-    'prompt 5'
-  )
+  expect(
+    screen.getByRole('textbox', {
+      name: i18n.t('modelTests.textRound', { count: 2 }),
+    })
+  ).toHaveValue('prompt 3')
+  expect(
+    screen.getByRole('textbox', {
+      name: i18n.t('modelTests.textRound', { count: 4 }),
+    })
+  ).toHaveValue('prompt 5')
   fireEvent.click(screen.getByRole('button', { name: 'Save plan' }))
   await waitFor(() =>
     expect(mock.request).toHaveBeenCalledWith(
