@@ -66,7 +66,7 @@ var ErrInvalidExportType = errors.New("invalid export type; only all/accounts/pr
 
 var (
 	MaxExportRowsPerTable = 50_000
-	MaxExportCellBytes    = 4 << 20
+	MaxExportCellBytes    = 20 << 20
 	MaxExportPayloadBytes = int64(64 << 20)
 )
 
@@ -209,6 +209,9 @@ func queryTableAsJSON(db *sqlx.DB, table string, estimatedPayloadBytes *int64) (
 				v = string(b)
 			}
 			if truncated, ok := truncateExportCell(v); ok {
+				if table == "settings" || table == "account_group_snapshots" || table == "model_test_results" {
+					return nil, nil, ExportLimitError{message: fmt.Sprintf("table %s column %s exceeds max export cell bytes of %d", table, k, MaxExportCellBytes)}
+				}
 				row[k] = truncated
 				warnings[k]++
 				continue

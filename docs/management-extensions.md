@@ -80,3 +80,17 @@
 - 图片/视频可选择本地文件（单文件最多 6 MiB），预览、移除并保存；也可填写 HTTP(S) URL。
 - 文本、视频、Codex 可配置各自的系统提示词；实际请求分别使用 system 消息、systemInstruction、developer 消息，详情保留实际提示词。
 - 新闻源仅选择 Hacker News RSS（`https://hnrss.org/frontpage`）或 Spaceflight（`https://api.spaceflightnewsapi.net/v4/articles/?limit=20`）。提示词包含 `{NEWS-TODAY}` 时按需读取摘要；支持预览，失败停止批次，不调用模型。RSS/Atom 使用 gofeed，Spaceflight 使用专用 JSON 字段。成功摘要按来源与 UTC+8 日期缓存，近 24 小时最多 20 条，不足 10 条按来源顺序补齐。
+
+## 导入导出
+
+| 导出类型 | 新增内容 |
+| --- | --- |
+| 全部 `all` | 站点标签、账号分组快照/刷新状态、测试计划与历史 |
+| 账号 `accounts` | 站点标签；沿用站点/账号/模型/路由范围，不含分组与测试 |
+| 偏好 `preferences` | 完整测试计划：目标、系统/用户提示词、新闻源、图片/视频素材、定时规则 |
+
+- 测试计划保存在 `settings.model_test_plan`；本地上传素材随计划导出，URL 素材只保存地址。新闻正文缓存不导出。
+- 列显示、列宽保存在浏览器，筛选/排序/分页在 URL，均不属于数据库备份。
+- 导入是合并，已有相同主键（设置为 key、分组快照为 account_id）跳过，不覆盖现有配置。备份预览会显示冲突。
+- 单字段最大 20 MiB；结构化配置/分组/测试记录超限明确报错，不截断。整体导入最大 20 MiB，导出最大 64 MiB；大量历史迁移使用一致性数据库备份。
+- 部署凭据、管理员令牌、WebDAV 配置等运行环境设置沿用现有导入排除规则。

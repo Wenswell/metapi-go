@@ -107,8 +107,9 @@ dropping ownership. Use a consistent whole-database snapshot or the explicit
 database migration tool to preserve these users and their Keys.
 
 `type=accounts` and `type=preferences` are scoped exports; `metadata.excluded_tables` additionally lists the tables
-outside that scope. Limits: 50,000 rows per table, 4 MiB per cell, 64 MiB per payload — exceeding one fails the export
-with `413` instead of truncating silently.
+outside that scope. Limits: 50,000 rows per table, 20 MiB per cell, 64 MiB per payload. Row/payload limits and oversized
+settings, account-group snapshots or model-test records fail with `413`; other oversized cells are truncated and listed
+in `metadata.warnings`. Import cells are also limited to 20 MiB. The complete import request remains limited to 20 MiB.
 
 ### POST /api/settings/backup/import
 

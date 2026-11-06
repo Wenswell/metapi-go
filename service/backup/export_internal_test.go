@@ -8,6 +8,7 @@ package backup
 // parser -- so it is proven here against the function production actually calls.
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
@@ -93,5 +94,20 @@ func TestBuildPayloadTruncatesOversizedCells(t *testing.T) {
 	}
 	if !strings.Contains(message, "…[truncated by metapi: original 4096 bytes]") {
 		t.Fatalf("truncation marker missing: %q", message)
+	}
+}
+
+func TestBuildPayloadRejectsOversizedSettingsWithoutTruncation(t *testing.T) {
+	db := setupInternalBackupDB(t)
+	oldMax := MaxExportCellBytes
+	MaxExportCellBytes = 64
+	t.Cleanup(func() { MaxExportCellBytes = oldMax })
+	if _, err := db.Exec(`INSERT INTO settings (key,value) VALUES ('model_test_plan',?)`, strings.Repeat("x", 4096)); err != nil {
+		t.Fatal(err)
+	}
+	_, err := BuildPayload(db, "preferences")
+	var limitErr ExportLimitError
+	if !errors.As(err, &limitErr) {
+		t.Fatalf("error=%v, want export limit error", err)
 	}
 }

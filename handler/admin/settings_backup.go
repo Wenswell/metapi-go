@@ -52,7 +52,7 @@ var allowPrivateWebdavTargets bool
 var (
 	backupImportMaxRowsPerTable  = 50_000
 	backupImportMaxColumnsPerRow = 128
-	backupImportMaxCellBytes     = 4 << 20
+	backupImportMaxCellBytes     = 20 << 20
 )
 
 type webdavBackupConfig struct {
@@ -553,7 +553,7 @@ type backupImportPreview struct {
 }
 
 // previewBackupImportTables computes the import plan without writing anything.
-// PK detection: "id" for every table except "settings" which uses "key".
+// PK detection follows the settings and account-group snapshot schema.
 func previewBackupImportTables(db *sqlx.DB, tables map[string]json.RawMessage) (map[string]backupImportPreview, error) {
 	plan := make(map[string]backupImportPreview, len(tables))
 	for _, table := range allTables {
@@ -581,6 +581,8 @@ func previewBackupImportTables(db *sqlx.DB, tables map[string]json.RawMessage) (
 		pkCol := "id"
 		if table == "settings" {
 			pkCol = "key"
+		} else if table == "account_group_snapshots" {
+			pkCol = "account_id"
 		}
 
 		// Collect candidate PK values for the exists-check. Rows without a PK
