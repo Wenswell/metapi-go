@@ -20,6 +20,8 @@ var modelTestNewsSources = map[string]string{
 	"rss":         "https://hnrss.org/frontpage",
 	"spaceflight": "https://api.spaceflightnewsapi.net/v4/articles/?limit=20",
 }
+var modelTestNewsHTTPClient = ProxyAwareHTTPClient("", 20*time.Second)
+
 var modelTestNewsCache = struct {
 	sync.Mutex
 	day, source, digest string
@@ -148,7 +150,7 @@ func LoadModelTestNews(ctx context.Context, source string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	response, err := http.DefaultClient.Do(req)
+	response, err := modelTestNewsHTTPClient.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("news source request failed: %w", err)
 	}
