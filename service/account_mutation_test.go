@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 
@@ -851,6 +852,29 @@ func TestListAccountsWithSites(t *testing.T) {
 	}
 	if len(accounts) < 2 {
 		t.Errorf("expected at least 2 accounts, got %d", len(accounts))
+	}
+}
+
+func TestAccountListsIncludeSiteTags(t *testing.T) {
+	db := openTestDB(t)
+	siteID := createTestSite(t, db, "Tagged", "https://example.test", "new-api")
+	createTestAccount(t, db, siteID, strPtr("user"), "synthetic-token")
+	if _, err := db.Exec(db.Rebind(`UPDATE sites SET tags=? WHERE id=?`), `["公益"]`, siteID); err != nil {
+		t.Fatal(err)
+	}
+	snapshot, err := ListAccountsWithSites(db.DB)
+	if err != nil {
+		t.Fatal(err)
+	}
+	page, _, err := ListAccountsWithSitesPaginated(db.DB, 10, 0, AccountListFilter{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, rows := range [][]map[string]any{snapshot, page} {
+		site := rows[0]["site"].(map[string]any)
+		if string(site["tags"].(json.RawMessage)) != `["公益"]` {
+			t.Fatalf("missing site tags: %v", site["tags"])
+		}
 	}
 }
 

@@ -691,7 +691,7 @@ func updateAccountFieldsOn(q accountQueryExecer, accountID int64, updates map[st
 func ListAccountsWithSites(db *sqlx.DB) ([]map[string]any, error) {
 	rows, err := db.Queryx(
 		`SELECT a.*, s.id as site_id_val, s.name as site_name, s.url as site_url,
-		        s.platform as site_platform, s.status as site_status
+		        s.platform as site_platform, s.status as site_status, s.tags as site_tags
 		 FROM accounts a INNER JOIN sites s ON a.site_id = s.id
 		 ORDER BY a.sort_order, a.id`,
 	)
@@ -766,7 +766,7 @@ func ListAccountsWithSitesPaginated(db *sqlx.DB, limit, offset int, filter Accou
 
 	rows, err := db.Queryx(db.Rebind(
 		`SELECT a.*, s.id as site_id_val, s.name as site_name, s.url as site_url,
-		        s.platform as site_platform, s.status as site_status
+		        s.platform as site_platform, s.status as site_status, s.tags as site_tags
 		 FROM accounts a INNER JOIN sites s ON a.site_id = s.id`+where+`
 		 ORDER BY a.sort_order, a.id
 		 LIMIT ? OFFSET ?`), append(args, limit, offset)...)
@@ -881,6 +881,10 @@ func enrichAccountOverviewRow(account map[string]any) map[string]any {
 		"url":      account["siteUrl"],
 		"platform": account["sitePlatform"],
 		"status":   siteStatus,
+		"tags":     json.RawMessage("[]"),
+	}
+	if tags := asString(account["siteTags"]); tags != "" {
+		account["site"].(map[string]any)["tags"] = json.RawMessage(tags)
 	}
 	// Prefer nested site; drop flat join aliases that are not account columns.
 	delete(account, "siteIdVal")
@@ -888,6 +892,7 @@ func enrichAccountOverviewRow(account map[string]any) map[string]any {
 	delete(account, "siteUrl")
 	delete(account, "sitePlatform")
 	delete(account, "siteStatus")
+	delete(account, "siteTags")
 	// One credential policy for every admin surface (see RedactAccountSecrets):
 	// plaintext secrets never leave the process on a read or a write response.
 	RedactAccountSecrets(account)

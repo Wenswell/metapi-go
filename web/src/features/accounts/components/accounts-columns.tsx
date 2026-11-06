@@ -4,7 +4,7 @@
 // (mobileTitle / mobileBadge / mobileHidden / mobileOrder) so the data-table
 // package's automatic mobile degradation needs zero per-feature card code.
 
-import type { ColumnDef } from '@tanstack/react-table'
+import type { ColumnDef } from "@tanstack/react-table";
 import {
   CalendarCheck,
   CheckCircle2,
@@ -22,100 +22,100 @@ import {
   TriangleAlert,
   XCircle,
   type LucideIcon,
-} from 'lucide-react'
-import { memo, useCallback, useMemo } from 'react'
-import { useTranslation } from 'react-i18next'
+} from "lucide-react";
+import { memo, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
-import { PlatformBadge } from '@/components/common/platform-badge'
+import { PlatformBadge } from "@/components/common/platform-badge";
 import {
   ProbeHealthBar,
   type ProbeHistoryMap,
-} from '@/components/common/probe-health-bar'
-import { SafeExternalLink } from '@/components/common/safe-external-link'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
+} from "@/components/common/probe-health-bar";
+import { SafeExternalLink } from "@/components/common/safe-external-link";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Spinner } from '@/components/ui/spinner'
+} from "@/components/ui/dropdown-menu";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip'
-import { formatCurrency } from '@/lib/format'
-import { cn } from '@/lib/utils'
+} from "@/components/ui/tooltip";
+import { formatCurrency } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
-import { resolveAccountDisplayName } from '../lib/accounts-display-name'
-import type { Account, AccountRowActions, RuntimeHealthState } from '../types'
+import { resolveAccountDisplayName } from "../lib/accounts-display-name";
+import type { Account, AccountRowActions, RuntimeHealthState } from "../types";
 
 // ---------------------------------------------------------------------------
 // Health badge mapping
 // ---------------------------------------------------------------------------
 
 interface HealthBadgeConfig {
-  labelKey: string
-  variant: 'success' | 'secondary' | 'destructive' | 'warning' | 'outline'
-  icon: LucideIcon
+  labelKey: string;
+  variant: "success" | "secondary" | "destructive" | "warning" | "outline";
+  icon: LucideIcon;
 }
 
 const HEALTH_BADGE_CONFIG: Record<RuntimeHealthState, HealthBadgeConfig> = {
   healthy: {
-    labelKey: 'accounts.columns.healthHealthy',
-    variant: 'success',
+    labelKey: "accounts.columns.healthHealthy",
+    variant: "success",
     icon: CheckCircle2,
   },
   degraded: {
-    labelKey: 'accounts.columns.healthDegraded',
-    variant: 'warning',
+    labelKey: "accounts.columns.healthDegraded",
+    variant: "warning",
     icon: TriangleAlert,
   },
   unhealthy: {
-    labelKey: 'accounts.columns.healthUnhealthy',
-    variant: 'destructive',
+    labelKey: "accounts.columns.healthUnhealthy",
+    variant: "destructive",
     icon: XCircle,
   },
   disabled: {
-    labelKey: 'accounts.columns.healthDisabled',
-    variant: 'secondary',
+    labelKey: "accounts.columns.healthDisabled",
+    variant: "secondary",
     icon: PauseCircle,
   },
   unknown: {
-    labelKey: 'accounts.columns.healthUnknown',
-    variant: 'outline',
+    labelKey: "accounts.columns.healthUnknown",
+    variant: "outline",
     icon: HelpCircle,
   },
-}
+};
 
 function useResolveHealth() {
-  const { t } = useTranslation()
+  const { t } = useTranslation();
   // Stable identity: the columns array is memoized below and must not
   // re-build just because this page re-rendered, otherwise every row's
   // memoization is defeated on each unrelated state change.
   return useCallback(
     function resolveHealth(
-      account: Account
+      account: Account,
     ): HealthBadgeConfig & { label: string } {
-      if (account.status === 'expired') {
+      if (account.status === "expired") {
         return {
-          labelKey: 'accounts.columns.healthExpired',
-          label: t('accounts.columns.healthExpired'),
-          variant: 'destructive',
+          labelKey: "accounts.columns.healthExpired",
+          label: t("accounts.columns.healthExpired"),
+          variant: "destructive",
           icon: Clock,
-        }
+        };
       }
-      const state = account.runtimeHealth?.state ?? 'unknown'
-      const config = HEALTH_BADGE_CONFIG[state] ?? HEALTH_BADGE_CONFIG.unknown
-      return { ...config, label: t(config.labelKey) }
+      const state = account.runtimeHealth?.state ?? "unknown";
+      const config = HEALTH_BADGE_CONFIG[state] ?? HEALTH_BADGE_CONFIG.unknown;
+      return { ...config, label: t(config.labelKey) };
     },
-    [t]
-  )
+    [t],
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -123,24 +123,24 @@ function useResolveHealth() {
 // ---------------------------------------------------------------------------
 
 function formatPercent(used: number, total: number): string {
-  if (!total || total <= 0) return '—'
-  const ratio = Math.min(1, Math.max(0, used / total))
-  return `${(ratio * 100).toFixed(1)}%`
+  if (!total || total <= 0) return "—";
+  const ratio = Math.min(1, Math.max(0, used / total));
+  return `${(ratio * 100).toFixed(1)}%`;
 }
 
 function useResolveDisplayName() {
-  const { t } = useTranslation()
+  const { t } = useTranslation();
   // Stable identity — see useResolveHealth.
   return useCallback(
     function resolveDisplayName(account: Account): string {
       return resolveAccountDisplayName(
         account,
-        t('accounts.columns.fallbackApiKey'),
-        t('accounts.columns.fallbackUnnamed')
-      )
+        t("accounts.columns.fallbackApiKey"),
+        t("accounts.columns.fallbackUnnamed"),
+      );
     },
-    [t]
-  )
+    [t],
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -173,73 +173,73 @@ export const AccountsRowActions = memo(function AccountsRowActions({
   pendingPinId = null,
   pendingManualCheckinId = null,
 }: {
-  account: Account
-  actions: AccountRowActions
-  pendingStatusId?: number | null
-  pendingCheckinId?: number | null
-  pendingPinId?: number | null
-  pendingManualCheckinId?: number | null
+  account: Account;
+  actions: AccountRowActions;
+  pendingStatusId?: number | null;
+  pendingCheckinId?: number | null;
+  pendingPinId?: number | null;
+  pendingManualCheckinId?: number | null;
 }) {
-  const { t } = useTranslation()
-  const canCheckin = account.capabilities?.canCheckin ?? false
-  const isThisRowPending = pendingStatusId === account.id
-  const isPinPending = pendingPinId === account.id
-  const isCheckinPending = pendingCheckinId === account.id
-  const isManualCheckinPending = pendingManualCheckinId === account.id
+  const { t } = useTranslation();
+  const canCheckin = account.capabilities?.canCheckin ?? false;
+  const isThisRowPending = pendingStatusId === account.id;
+  const isPinPending = pendingPinId === account.id;
+  const isCheckinPending = pendingCheckinId === account.id;
+  const isManualCheckinPending = pendingManualCheckinId === account.id;
   const toggleLabel =
-    account.status === 'disabled'
-      ? t('accounts.columns.enable')
-      : t('accounts.columns.disable')
-  let pinIcon = <Pin />
+    account.status === "disabled"
+      ? t("accounts.columns.enable")
+      : t("accounts.columns.disable");
+  let pinIcon = <Pin />;
   if (isPinPending) {
-    pinIcon = <Spinner />
+    pinIcon = <Spinner />;
   } else if (account.isPinned) {
-    pinIcon = <PinOff />
+    pinIcon = <PinOff />;
   }
   return (
-    <div className='flex items-center gap-1'>
+    <div className="flex items-center gap-1">
       <TooltipProvider delay={200}>
         <Tooltip>
           <TooltipTrigger
             render={
               <Button
-                variant='ghost'
-                size='icon-sm'
+                variant="ghost"
+                size="icon-sm"
                 disabled={isThisRowPending}
                 aria-label={toggleLabel}
-                className='max-[640px]:hidden'
+                className="max-[640px]:hidden"
                 data-hit-area
                 onClick={() => actions.onToggleStatus(account)}
               />
             }
           >
-            {isThisRowPending ? <Spinner /> : <Power className='size-4' />}
+            {isThisRowPending ? <Spinner /> : <Power className="size-4" />}
           </TooltipTrigger>
-          <TooltipContent side='top'>{toggleLabel}</TooltipContent>
+          <TooltipContent side="top">{toggleLabel}</TooltipContent>
         </Tooltip>
       </TooltipProvider>
       <DropdownMenu>
         <DropdownMenuTrigger
           render={
             <Button
-              variant='ghost'
-              size='icon-sm'
-              className='data-popup-open:bg-accent'
-              aria-label={t('accounts.columns.rowActions')}
+              variant="ghost"
+              size="icon-sm"
+              className="data-popup-open:bg-accent"
+              aria-label={t("accounts.columns.rowActions")}
               data-hit-area
             />
           }
         >
-          <MoreHorizontal className='size-4' />
+          <MoreHorizontal className="size-4" />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align='end' sideOffset={4}>
+        <DropdownMenuContent align="end" sideOffset={4}>
           <DropdownMenuItem onClick={() => actions.onViewDetail(account)}>
             <Eye />
-            {t('accounts.columns.viewDetails')}
+            {t("accounts.columns.viewDetails")}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => actions.onRefresh(account)}>
             <RefreshCw />
-            {t('accounts.columns.refreshBalance')}
+            {t("accounts.columns.refreshBalance")}
           </DropdownMenuItem>
           <DropdownMenuItem
             disabled={isPinPending}
@@ -247,17 +247,17 @@ export const AccountsRowActions = memo(function AccountsRowActions({
           >
             {pinIcon}
             {account.isPinned
-              ? t('accounts.columns.unpin')
-              : t('accounts.columns.pin')}
+              ? t("accounts.columns.unpin")
+              : t("accounts.columns.pin")}
           </DropdownMenuItem>
           <DropdownMenuItem
             disabled={isThisRowPending}
             onClick={() => actions.onToggleStatus(account)}
           >
             <Power />
-            {account.status === 'disabled'
-              ? t('accounts.columns.enable')
-              : t('accounts.columns.disable')}
+            {account.status === "disabled"
+              ? t("accounts.columns.enable")
+              : t("accounts.columns.disable")}
           </DropdownMenuItem>
           {canCheckin && (
             <DropdownMenuItem
@@ -265,7 +265,7 @@ export const AccountsRowActions = memo(function AccountsRowActions({
               onClick={() => actions.onTriggerCheckin(account)}
             >
               {isManualCheckinPending ? <Spinner /> : <CalendarCheck />}
-              {t('accounts.columns.triggerCheckin')}
+              {t("accounts.columns.triggerCheckin")}
             </DropdownMenuItem>
           )}
           {canCheckin && (
@@ -275,27 +275,27 @@ export const AccountsRowActions = memo(function AccountsRowActions({
             >
               {isCheckinPending ? <Spinner /> : <CalendarCheck />}
               {account.checkinEnabled
-                ? t('accounts.columns.disableCheckin')
-                : t('accounts.columns.enableCheckin')}
+                ? t("accounts.columns.disableCheckin")
+                : t("accounts.columns.enableCheckin")}
             </DropdownMenuItem>
           )}
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => actions.onEdit(account)}>
             <Pencil />
-            {t('common.edit')}
+            {t("common.edit")}
           </DropdownMenuItem>
           <DropdownMenuItem
-            variant='destructive'
+            variant="destructive"
             onClick={() => actions.onDelete(account)}
           >
             <Trash2 />
-            {t('common.delete')}
+            {t("common.delete")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
-  )
-})
+  );
+});
 
 // ---------------------------------------------------------------------------
 // Columns hook
@@ -307,11 +307,11 @@ export function useAccountsColumns(
   pendingCheckinId: number | null = null,
   pendingPinId: number | null = null,
   pendingManualCheckinId: number | null = null,
-  probeHistory?: ProbeHistoryMap
+  probeHistory?: ProbeHistoryMap,
 ): ColumnDef<Account>[] {
-  const { t } = useTranslation()
-  const resolveHealth = useResolveHealth()
-  const resolveDisplayName = useResolveDisplayName()
+  const { t } = useTranslation();
+  const resolveHealth = useResolveHealth();
+  const resolveDisplayName = useResolveDisplayName();
   // Memoized: the shared data-table row component skips re-rendering a row
   // only when the column defs keep the same identity (table.options.columns),
   // so a fresh array every render re-renders all 100+ rows on any unrelated
@@ -319,17 +319,17 @@ export function useAccountsColumns(
   return useMemo<ColumnDef<Account>[]>(
     () => [
       {
-        id: 'siteTag',
-        header: t('siteTags.label'),
-        accessorFn: () => [],
+        id: "siteTag",
+        header: t("siteTags.label"),
+        accessorFn: (row) => row.site?.tags ?? [],
         filterFn: (row, id, values: string[]) =>
           !values.length ||
           values.some((tag) => row.getValue<string[]>(id).includes(tag)),
-        cell: ({ getValue }) => getValue<string[]>().join(', '),
+        cell: ({ getValue }) => getValue<string[]>().join(", "),
         enableGlobalFilter: false,
       },
       {
-        id: 'select',
+        id: "select",
         size: 40,
         enableSorting: false,
         enableHiding: false,
@@ -339,75 +339,75 @@ export function useAccountsColumns(
             onCheckedChange={(value) =>
               table.toggleAllPageRowsSelected(Boolean(value))
             }
-            aria-label={t('accounts.columns.selectAll')}
+            aria-label={t("accounts.columns.selectAll")}
           />
         ),
         cell: ({ row }) => (
           <Checkbox
             checked={row.getIsSelected()}
             onCheckedChange={(value) => row.toggleSelected(Boolean(value))}
-            aria-label={t('accounts.columns.selectRow')}
+            aria-label={t("accounts.columns.selectRow")}
           />
         ),
         meta: { mobileHidden: true },
       },
       {
-        id: 'name',
-        accessorFn: (row) => row.username ?? '',
-        header: t('accounts.columns.name'),
+        id: "name",
+        accessorFn: (row) => row.username ?? "",
+        header: t("accounts.columns.name"),
         cell: ({ row }) => {
-          const account = row.original
-          const displayName = resolveDisplayName(account)
+          const account = row.original;
+          const displayName = resolveDisplayName(account);
           return (
-            <div className='flex flex-col gap-1'>
-              <div className='flex items-center gap-2'>
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2">
                 <button
-                  type='button'
-                  data-slot='account-name'
-                  aria-label={`${t('accounts.columns.viewDetails')}: ${displayName}`}
+                  type="button"
+                  data-slot="account-name"
+                  aria-label={`${t("accounts.columns.viewDetails")}: ${displayName}`}
                   title={displayName}
                   onClick={() => actions.onViewDetail(account)}
-                  className='hover:text-primary focus-visible:outline-focus-ring max-w-55 min-w-0 truncate rounded-sm text-left font-medium hover:underline focus-visible:outline-2 max-[640px]:line-clamp-2 max-[640px]:min-h-10 max-[640px]:max-w-full max-[640px]:break-all max-[640px]:whitespace-normal'
+                  className="hover:text-primary focus-visible:outline-focus-ring max-w-55 min-w-0 truncate rounded-sm text-left font-medium hover:underline focus-visible:outline-2 max-[640px]:line-clamp-2 max-[640px]:min-h-10 max-[640px]:max-w-full max-[640px]:break-all max-[640px]:whitespace-normal"
                 >
                   {displayName}
                 </button>
-                <Badge variant='secondary'>
-                  {account.credentialMode === 'session'
-                    ? t('accounts.columns.credentialModeSession')
-                    : t('accounts.columns.credentialModeApiKey')}
+                <Badge variant="secondary">
+                  {account.credentialMode === "session"
+                    ? t("accounts.columns.credentialModeSession")
+                    : t("accounts.columns.credentialModeApiKey")}
                 </Badge>
               </div>
               {account.tags && account.tags.length > 0 && (
-                <div className='flex flex-wrap gap-1'>
+                <div className="flex flex-wrap gap-1">
                   {account.tags.slice(0, 3).map((tag) => (
-                    <Badge key={tag} variant='outline' className='text-2xs'>
+                    <Badge key={tag} variant="outline" className="text-2xs">
                       {tag}
                     </Badge>
                   ))}
                 </div>
               )}
             </div>
-          )
+          );
         },
         meta: { mobileTitle: true },
       },
       {
-        id: 'site',
+        id: "site",
         accessorFn: (row) => String(row.siteId),
-        header: t('accounts.columns.site'),
+        header: t("accounts.columns.site"),
         cell: ({ row }) => {
-          const account = row.original
-          const site = account.site
-          if (!site) return <span className='text-muted-foreground'>—</span>
+          const account = row.original;
+          const site = account.site;
+          if (!site) return <span className="text-muted-foreground">—</span>;
           return (
-            <div className='flex flex-col'>
+            <div className="flex flex-col">
               {/* Quick jump to the upstream site (#1108): the site name is a
                   safe external link when the stored URL is a valid http(s)
                   endpoint, plain text otherwise (same ladder as the sites
                   page columns, #985). */}
               <SafeExternalLink
-                url={site.url ?? ''}
-                className='max-w-40 text-sm max-[640px]:max-w-full max-[640px]:[&>span]:line-clamp-2 max-[640px]:[&>span]:break-words max-[640px]:[&>span]:whitespace-normal'
+                url={site.url ?? ""}
+                className="max-w-40 text-sm max-[640px]:max-w-full max-[640px]:[&>span]:line-clamp-2 max-[640px]:[&>span]:break-words max-[640px]:[&>span]:whitespace-normal"
                 title={
                   site.name && site.url
                     ? `${site.name} — ${site.url}`
@@ -419,71 +419,71 @@ export function useAccountsColumns(
               {site.platform && (
                 <PlatformBadge
                   platform={site.platform}
-                  className='text-muted-foreground text-2xs w-fit'
+                  className="text-muted-foreground text-2xs w-fit"
                 />
               )}
             </div>
-          )
+          );
         },
         filterFn: (row, _columnId, filterValue: unknown) => {
           if (!Array.isArray(filterValue) || filterValue.length === 0) {
-            return true
+            return true;
           }
-          return filterValue.includes(String(row.original.siteId))
+          return filterValue.includes(String(row.original.siteId));
         },
         meta: { mobileOrder: 1 },
       },
       {
-        id: 'status',
+        id: "status",
         accessorFn: (row) => row.status,
-        header: t('common.status'),
+        header: t("common.status"),
         cell: ({ row }) => {
-          const account = row.original
-          const config = resolveHealth(account)
-          const HealthIcon = config.icon
-          const reason = account.runtimeHealth?.reason?.trim()
+          const account = row.original;
+          const config = resolveHealth(account);
+          const HealthIcon = config.icon;
+          const reason = account.runtimeHealth?.reason?.trim();
           const badge = (
             <Badge variant={config.variant}>
-              <HealthIcon className='size-3' aria-hidden='true' />
+              <HealthIcon className="size-3" aria-hidden="true" />
               {config.label}
             </Badge>
-          )
+          );
           if (!reason) {
-            return badge
+            return badge;
           }
           return (
             <TooltipProvider delay={200}>
               <Tooltip>
                 <TooltipTrigger
-                  render={<span className='w-fit'>{badge}</span>}
+                  render={<span className="w-fit">{badge}</span>}
                 />
-                <TooltipContent side='top' className='max-w-xs'>
-                  <div className='flex flex-col gap-0.5'>
-                    <span className='font-medium'>
-                      {t('accounts.columns.healthDetail')}
+                <TooltipContent side="top" className="max-w-xs">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="font-medium">
+                      {t("accounts.columns.healthDetail")}
                     </span>
-                    <span className='text-xs'>{reason}</span>
+                    <span className="text-xs">{reason}</span>
                   </div>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-          )
+          );
         },
         filterFn: (row, _columnId, filterValue: unknown) => {
           if (!Array.isArray(filterValue) || filterValue.length === 0) {
-            return true
+            return true;
           }
-          return filterValue.includes(row.original.status)
+          return filterValue.includes(row.original.status);
         },
         meta: { mobileBadge: true },
       },
       {
-        id: 'probeHealth',
+        id: "probeHealth",
         accessorFn: (row) => probeHistory?.[row.id]?.length ?? 0,
         enableSorting: false,
         header: () => (
-          <span className='text-muted-foreground text-xs'>
-            {t('probeHealth.column')}
+          <span className="text-muted-foreground text-xs">
+            {t("probeHealth.column")}
           </span>
         ),
         cell: ({ row }) => (
@@ -495,86 +495,86 @@ export function useAccountsColumns(
         meta: { mobileHidden: true },
       },
       {
-        accessorKey: 'balance',
-        header: t('accounts.columns.balance'),
+        accessorKey: "balance",
+        header: t("accounts.columns.balance"),
         cell: ({ row }) => {
-          const account = row.original
+          const account = row.original;
           return (
-            <div className='flex flex-col'>
-              <span className='tabular-nums'>
+            <div className="flex flex-col">
+              <span className="tabular-nums">
                 {formatCurrency(account.balance)}
               </span>
               {account.todayReward ? (
-                <span className='text-success text-2xs'>
+                <span className="text-success text-2xs">
                   +{formatCurrency(account.todayReward)}
                 </span>
               ) : null}
             </div>
-          )
+          );
         },
         meta: { mobileOrder: 2 },
       },
       {
-        accessorKey: 'balanceUsed',
-        header: t('accounts.columns.used'),
+        accessorKey: "balanceUsed",
+        header: t("accounts.columns.used"),
         cell: ({ row }) => {
-          const account = row.original
+          const account = row.original;
           return (
-            <div className='flex flex-col'>
-              <span className='tabular-nums'>
+            <div className="flex flex-col">
+              <span className="tabular-nums">
                 {formatCurrency(account.balanceUsed)}
               </span>
               {account.balanceUsed != null &&
                 account.quota != null &&
                 account.quota > 0 && (
-                  <span className='text-muted-foreground text-2xs'>
+                  <span className="text-muted-foreground text-2xs">
                     {formatPercent(
                       account.balanceUsed ?? 0,
-                      account.quota ?? 0
+                      account.quota ?? 0,
                     )}
                   </span>
                 )}
             </div>
-          )
+          );
         },
         meta: { mobileHidden: true },
       },
       {
-        id: 'checkin',
-        accessorFn: (row) => (row.checkinEnabled ? 'on' : 'off'),
-        header: t('accounts.columns.checkin'),
+        id: "checkin",
+        accessorFn: (row) => (row.checkinEnabled ? "on" : "off"),
+        header: t("accounts.columns.checkin"),
         cell: ({ row }) => {
-          const account = row.original
+          const account = row.original;
           if (!account.capabilities?.canCheckin) {
             return (
-              <span className='text-muted-foreground text-xs'>
-                {t('accounts.columns.checkinUnsupported')}
+              <span className="text-muted-foreground text-xs">
+                {t("accounts.columns.checkinUnsupported")}
               </span>
-            )
+            );
           }
           // The badge reads as clickable, so it must BE clickable (like the
           // original TS Accounts page): a button that keeps the badge look
           // (pill, same default/outline colors) and toggles check-in inline.
           // size='xs' is h-6 = 24px, the WCAG 2.5.8 minimum hit target.
-          const isPending = pendingCheckinId === account.id
+          const isPending = pendingCheckinId === account.id;
           const label = account.checkinEnabled
-            ? t('accounts.columns.checkinOn')
-            : t('accounts.columns.checkinOff')
+            ? t("accounts.columns.checkinOn")
+            : t("accounts.columns.checkinOff");
           const actionLabel = account.checkinEnabled
-            ? t('accounts.columns.disableCheckin')
-            : t('accounts.columns.enableCheckin')
+            ? t("accounts.columns.disableCheckin")
+            : t("accounts.columns.enableCheckin");
           return (
             <TooltipProvider delay={200}>
               <Tooltip>
                 <TooltipTrigger
                   render={
                     <Button
-                      variant={account.checkinEnabled ? 'ghost' : 'outline'}
-                      size='xs'
+                      variant={account.checkinEnabled ? "ghost" : "outline"}
+                      size="xs"
                       className={cn(
-                        'rounded-4xl px-2.5 font-medium',
+                        "rounded-4xl px-2.5 font-medium",
                         account.checkinEnabled &&
-                          'bg-success/10 text-success hover:bg-success/20 hover:text-success'
+                          "bg-success/10 text-success hover:bg-success/20 hover:text-success",
                       )}
                       aria-label={actionLabel}
                       data-hit-area
@@ -586,28 +586,28 @@ export function useAccountsColumns(
                   }
                 >
                   {account.checkinEnabled
-                    ? t('accounts.columns.checkinTooltipOn')
-                    : t('accounts.columns.checkinTooltipOff')}
+                    ? t("accounts.columns.checkinTooltipOn")
+                    : t("accounts.columns.checkinTooltipOff")}
                 </TooltipTrigger>
-                <TooltipContent side='top'>
+                <TooltipContent side="top">
                   {account.checkinEnabled
-                    ? t('accounts.columns.checkinTooltipOn')
-                    : t('accounts.columns.checkinTooltipOff')}
+                    ? t("accounts.columns.checkinTooltipOn")
+                    : t("accounts.columns.checkinTooltipOff")}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-          )
+          );
         },
         meta: { mobileOrder: 3 },
       },
       {
-        id: 'actions',
+        id: "actions",
         size: 80,
         enableSorting: false,
         enableHiding: false,
-        header: () => <span className='sr-only'>{t('common.actions')}</span>,
+        header: () => <span className="sr-only">{t("common.actions")}</span>,
         cell: ({ row }) => {
-          const account = row.original
+          const account = row.original;
           return (
             <AccountsRowActions
               account={account}
@@ -617,9 +617,9 @@ export function useAccountsColumns(
               pendingPinId={pendingPinId}
               pendingManualCheckinId={pendingManualCheckinId}
             />
-          )
+          );
         },
-        meta: { pinned: 'right' },
+        meta: { pinned: "right" },
       },
     ],
     [
@@ -632,6 +632,6 @@ export function useAccountsColumns(
       resolveDisplayName,
       t,
       probeHistory,
-    ]
-  )
+    ],
+  );
 }
